@@ -1,13 +1,16 @@
 (function() {
 
-  var POINTS_NUMBER = 120;
+  var POINTS_NUMBER = 100; //120;
   var POINTS_MOVE_DIST = 20;
   var MIN_SPEED = 10;
   var MAX_SPEED = 30;
   var SPEED = 400;
   var DEBUG = false;
   var CONNECTIONS = 5;
-  var DEFAULT_COLOR = '#9d967d';
+  var DEFAULT_COLOR = '#2ecc71';
+  var HOVER_COLOR = '#3498db';
+  var HOVER_RADIUS = 150;
+  var HOVER_ENABLED = true;
 
   var Util = {
     getClosestPoints: function(point, points, no) {
@@ -45,13 +48,19 @@
       return pointsByDistance;
     },
     distanceBetweenPoints: function(p1, p2) {
-      return (p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y);
+      return Math.sqrt((p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y));
     },
     getRandomPointInRadius(centerPoint, radius) {
       var angle = Math.random() * Math.PI * 2;
       return {
         x: centerPoint.x + radius * Math.cos(angle),
         y: centerPoint.y + radius * Math.sin(angle)
+      };
+    },
+    getRandomPointInRect(rect) {
+      return {
+        x: Math.random() * (rect.x2 - rect.x) + rect.x,
+        y: Math.random() * (rect.y2 - rect.y) + rect.y
       };
     },
     getMousePos: function(canvas, evt) {
@@ -79,16 +88,44 @@
     this.ctx = this.canvas.getContext("2d");
     this.dirty = true;
     this.startTime = null;
-
   };
 
   Stars.prototype.draw = function() {
+    var _this = this;
     this.ctx.clearRect(0, 0, this.boundary.width, this.boundary.height);
 
     /*-- draw points */
     _.forEach(this.points, function(point) {
       point.draw();
     })
+
+
+    // draw hover point
+    if (this.highlightPoint) {
+      this.ctx.fillStyle = HOVER_COLOR;
+      this.ctx.beginPath();
+      this.ctx.arc(this.highlightPoint.x, this.highlightPoint.y, 2, 0, 2 * Math.PI, false);
+      this.ctx.closePath();
+      this.ctx.fill();
+
+      var a = _.chain(this.points)
+        .filter(function(point) {
+          return Util.distanceBetweenPoints(point, _this.highlightPoint) < HOVER_RADIUS;
+        })
+        .value();
+
+      this.ctx.strokeStyle = HOVER_COLOR;
+      a.forEach(function(point) {
+        _this.ctx.globalAlpha = (HOVER_RADIUS - Util.distanceBetweenPoints(point, _this.highlightPoint)) / HOVER_RADIUS;
+        _this.ctx.beginPath();
+        _this.ctx.moveTo(point.x, point.y);
+        _this.ctx.lineTo(_this.highlightPoint.x, _this.highlightPoint.y);
+        _this.ctx.stroke();
+      });
+
+
+    }
+
   };
 
   Stars.prototype.movePoints = function() {
@@ -101,12 +138,30 @@
   }
 
   Stars.prototype.resize = function() {
+    var _this = this;
+    var resizedScale = {
+      x: this.canvas.offsetWidth / this.canvas.width,
+      y: this.canvas.offsetHeight / this.canvas.height,
+    }
+    console.log('scale', resizedScale);
+    
     this.canvas.width = this.canvas.offsetWidth;
     this.canvas.height = this.canvas.offsetHeight;
+    this.boundary = new Rect(0, 0, this.canvas.width, this.canvas.height);
+
+    _.forEach(this.points, function(point) {
+      var newPoint = {
+        x: point.x * resizedScale.x,
+        y: point.y * resizedScale.y
+      }
+      point.destination = newPoint;
+      point.origin = newPoint;
+      point.iteration = 0;
+    });
   }
 
   Stars.prototype.create = function() {
-    this.boundary = new Rect(0, 0, this.canvas.width, this.canvas.height)
+    this.boundary = new Rect(0, 0, this.canvas.width, this.canvas.height);
 
     var points = [];
 
@@ -128,7 +183,7 @@
 
     if (mousePos) {
       this.highlightPoint = mousePos;
-    } else if (this.highlightPoint) {
+    } else if (this.highlightPoint && HOVER_ENABLED) {
       var hoverPoints = Util.getClosestPoints(this.highlightPoint, _this.points, 3);
 
       this.points = _.map(this.points, function(point) {
@@ -140,8 +195,6 @@
       });
 
     }
-
-
   };
 
   Stars.prototype.update = function(timestamp) {
@@ -166,8 +219,10 @@
     var _this = this;
     this.canvas.addEventListener('mousemove', function(ev) {
       _this.highlight(Util.getMousePos(_this.canvas, event));
-    })
-    
+    });
+    window.addEventListener('resize', _.debounce(function() {
+      _this.resize();
+    }, 250));
   }
 
   Stars.prototype.init = function() {
@@ -201,6 +256,11 @@
       y: this.y
     };
   };
+  
+  Point.prototype.setRandomDestination = function(rect) {
+    this.x = Math.random() * (rect.x2 - rect.x) + rect.x;
+    this.y = Math.random() * (rect.y2 - rect.y) + rect.y;
+  };
 
   Point.prototype.linkClosest = function(no, points) {
     var _point = this;
@@ -223,7 +283,7 @@
 
       return link;
     });
-  }
+  };
 
   Point.prototype.move = function() {
     var _point = this;
@@ -248,12 +308,11 @@
 
   Point.prototype.draw = function() {
     var _point = this;
+
     //draw link
-    
-    _point.ctx.globalAlpha = _point.hover ? 0.5 : 0.1;
-    
+    _point.ctx.globalAlpha = 0.1;
     if (this.links) {
-      _point.ctx.strokeStyle = _point.hover ? '#FFFFFF' : DEFAULT_COLOR;
+      _point.ctx.strokeStyle = DEFAULT_COLOR;
       _.forEach(this.links, function(link) {
         _point.ctx.beginPath();
         _point.ctx.moveTo(_point.x, _point.y);
@@ -261,10 +320,8 @@
         _point.ctx.stroke();
       });
     };
-    
     _point.ctx.globalAlpha = 1;
-    
-    
+
     // draw point
     _point.ctx.fillStyle = '#182329';
     _point.ctx.beginPath();
@@ -272,7 +329,7 @@
     _point.ctx.closePath();
     _point.ctx.fill();
 
-    _point.ctx.fillStyle = _point.hover ? '#FFFFFF' : this.color;
+    _point.ctx.fillStyle = _point.hover ? HOVER_COLOR : this.color;
     _point.ctx.beginPath();
     _point.ctx.arc(this.x, this.y, _point.r, 0, 2 * Math.PI, false);
     _point.ctx.closePath();
