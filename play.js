@@ -50,14 +50,14 @@
     distanceBetweenPoints: function(p1, p2) {
       return Math.sqrt((p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y));
     },
-    getRandomPointInRadius(centerPoint, radius) {
+    getRandomPointInRadius: function(centerPoint, radius) {
       var angle = Math.random() * Math.PI * 2;
       return {
         x: centerPoint.x + radius * Math.cos(angle),
         y: centerPoint.y + radius * Math.sin(angle)
       };
     },
-    getRandomPointInRect(rect) {
+    getRandomPointInRect: function(rect) {
       return {
         x: Math.random() * (rect.x2 - rect.x) + rect.x,
         y: Math.random() * (rect.y2 - rect.y) + rect.y
@@ -139,14 +139,17 @@
 
   Stars.prototype.resize = function() {
     var _this = this;
-    var resizedScale = {
-      x: this.canvas.offsetWidth / this.canvas.width,
-      y: this.canvas.offsetHeight / this.canvas.height,
-    }
-    console.log('scale', resizedScale);
-    
+
     this.canvas.width = this.canvas.offsetWidth;
     this.canvas.height = this.canvas.offsetHeight;
+    this.create();
+
+    /*var resizedScale = {
+      x: this.canvas.offsetWidth / this.canvas.width,
+      y: this.canvas.offsetHeight / this.canvas.height
+    };
+
+
     this.boundary = new Rect(0, 0, this.canvas.width, this.canvas.height);
 
     _.forEach(this.points, function(point) {
@@ -157,8 +160,8 @@
       point.destination = newPoint;
       point.origin = newPoint;
       point.iteration = 0;
-    });
-  }
+    });*/
+  };
 
   Stars.prototype.create = function() {
     this.boundary = new Rect(0, 0, this.canvas.width, this.canvas.height);
@@ -222,8 +225,8 @@
     });
     window.addEventListener('resize', _.debounce(function() {
       _this.resize();
-    }, 250));
-  }
+    }, 25));
+  };
 
   Stars.prototype.init = function() {
     this.resize();

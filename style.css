@@ -1,40 +1,123 @@
+@import url('http://fonts.googleapis.com/css?family=Montserrat|Bitter');
+
+* {
+    margin: 0;
+    padding: 0;
+}
+
 html,
 body {
-  background-color: #182329;
-  margin: 0 0;
-  padding: 0;
-  width: 100%;
-  overflow: hidden;
+    background-color: #182329;
+    /*background: url('https://dl.dropboxusercontent.com/content_link/XG9rueeu8yaaoJIg5Fn5Zt1ii9n5JR9coGM3dtdHDxZxBVNrWKec3Uy4Ei4wzT3O/file') no-repeat center center fixed;*/
+    background: url('polygon-page-dark.png') no-repeat center center fixed;
+    background-size: cover;
+    width: 100%;
+    overflow: hidden;
 }
 
 canvas#playground {
-  display: block;
-  margin: 0 auto;
-  position: relative;
-  width: 100vw;
-  height: 100vh;
-  box-shadow: inset 0 0 300px #0F171C;
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 0;
+    width: 100vw;
+    height: 100vh;
+    box-shadow: inset 0 0 300px #0F171C;
 }
 
-#points {
-  display: none;
-  position: absolute;
-  top: 50%;
-  left: 0;
-  width: 100%;
-  margin-top: -100px;
-  z-index: 100;
-  list-style-type: none;
-  text-align: center;
-  color: #333;
+main {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
 }
 
-#points li {
-  display: inline-block;
-  width: 50px;
-  height: 50px;
-  background-color: #888;
-  border-radius: 25px;
-  line-height: 50px;
-  margin: 0 10px;
+h1 {
+    font: normal 32px/32px Bitter;
+    color: white;
+    text-align: center;
+    padding: 85px 100px;
+}
+
+#slant {
+    position: absolute;
+    /*background-color: rgba(46, 204, 113, 0.2);*/
+    /*background-color: rgba(0, 0, 0, 0.4);*/
+    background: linear-gradient(90deg, rgba(0, 0, 0, 0.5) 50%, rgba(46, 204, 113, 0.2) 100%);
+    display: block;
+    top: 0;
+    left: 0;
+    width: 1500px;
+    height: 1500px;
+    transform: rotate(45deg);
+    -ms-transform: rotate(45deg);
+    -webkit-transform:  translate(-750px, -750px) rotate(45deg);
+}
+
+#slant-2 {
+    position: absolute;
+    /*background-color: rgba(46, 204, 113, 0.2);*/
+    /*background-color: rgba(0, 0, 0, 0.4);*/
+    /* rgba(241, 196, 15,1.0) rgba(52, 152, 219,1.0) */
+    background: linear-gradient(90deg, rgba(0, 0, 0, 0.5) 50%, rgba(46, 204, 113, 0.3) 100%);
+    display: block;
+    top: 0;
+    left: 0;
+    width: 1500px;
+    height: 1500px;
+    transform: rotate(45deg);
+    -ms-transform: rotate(45deg);
+    -webkit-transform:  translate(-500px, -1200px) rotate(60deg);
+}
+
+/*nav styles*/
+ul {
+    background: white;
+    border-top: 6px solid rgba(46, 204, 113, 1.0);
+    width: 200px;
+    margin: 0 auto;
+}
+
+ul li {
+    list-style-type: none;
+    /*relative positioning for list items along with overflow hidden to contain the overflowing ripple*/
+    position: relative;
+    overflow: hidden;
+}
+
+ul li a {
+    font: normal 14px/28px Montserrat;
+    color: hsl(180, 40%, 40%);
+    display: block;
+    padding: 10px 15px;
+    text-decoration: none;
+    cursor: pointer; /*since the links are dummy without href values*/
+    /*prevent text selection*/
+    user-select: none;
+    /*static positioned elements appear behind absolutely positioned siblings(.ink in this case) hence we will make the links relatively positioned to bring them above .ink*/
+    position: relative;
+}
+
+/*.ink styles - the elements which will create the ripple effect. The size and position of these elements will be set by the JS code. Initially these elements will be scaled down to 0% and later animated to large fading circles on user click.*/
+.ink {
+    display: block;
+    position: absolute;
+    background: hsl(180, 40%, 80%);
+    border-radius: 100%;
+    transform: scale(0);
+}
+
+/*animation effect*/
+.ink.animate {
+    animation: ripple 0.65s linear;
+}
+
+@keyframes ripple {
+    /*scale the element to 250% to safely cover the entire link and fade it out*/
+    100% {
+        opacity: 0;
+        transform: scale(2.5);
+    }
 }
