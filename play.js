@@ -220,7 +220,7 @@
 
   Stars.prototype.bindEvents = function() {
     var _this = this;
-    this.canvas.addEventListener('mousemove', function(ev) {
+    window.addEventListener('mousemove', function(ev) {
       _this.highlight(Util.getMousePos(_this.canvas, event));
     });
     window.addEventListener('resize', _.debounce(function() {
