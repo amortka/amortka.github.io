@@ -70,7 +70,7 @@ h1 {
   width: 1500px;
   height: 1500px;
   background: linear-gradient(90deg, rgba($color-dark, $alpha-dark) 50%, rgba($color-accent, $alpha-accent) 100%);
-  transition: transform .2s ease-in-out;
+  //transition: transform .2s ease-in-out;
 
   @include screen-sm {
     width: 1000px;
@@ -121,45 +121,55 @@ h1 {
 // ****************************************************************************
 //  navigation
 // ****************************************************************************
+
 ul {
-  background: white;
-  border-top: 6px solid rgba($color-accent, 1.0);
-  width: 200px;
+  width: 80%;
   margin: 0 auto;
+  text-align: center;
 }
 
 ul li {
+  display: inline-block;
   list-style-type: none;
   position: relative;
   overflow: hidden;
+
+  margin: $dot-size/10;
+  border-radius: $dot-size;
+  width: $dot-size;
+  height: $dot-size;
+  background-color: #fff;
 }
 
 ul li a {
-  font: normal 14px/28px Montserrat;
-  color: hsl(180, 40%, 40%);
   display: block;
-  padding: 10px 15px;
+  font: normal $dot-size/3 Montserrat;
+  color: hsl(180, 40%, 40%);
+  width: $dot-size - ($dot-border * 2);
+  height: $dot-size - ($dot-border * 2);
+  border: $dot-border solid transparent;
+  border-radius: $dot-size;
+  padding: 0;
+  line-height: $dot-size - ($dot-border * 2);
+  text-align: center;
   text-decoration: none;
   cursor: pointer;
   user-select: none;
   position: relative;
+  background-size: cover;
 }
 
-.ink {
-  display: block;
-  position: absolute;
-  background: hsl(180, 40%, 80%);
-  border-radius: 100%;
-  transform: scale(0);
+ul li a:hover {
+  border: $dot-border solid $color-accent;
 }
 
-.ink.animate {
-  animation: ripple 0.65s linear;
+@mixin dot-background($img) {
+  background: url('../img/' + $img) no-repeat center center;
 }
 
-@keyframes ripple {
-  100% {
-    opacity: 0;
-    transform: scale(2.5);
-  }
+ul li.dot-heatmap a {
+  @include dot-background('dot-heatmap.png');
+}
+ul li.dot-points a {
+  @include dot-background('dot-points.png');
 }
