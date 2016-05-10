@@ -17,10 +17,10 @@ function setPerspectiveOrigin(event) {
         x: (event.pageX - elPoints.offsetLeft - elPoints.offsetWidth / 2) / windowSize.x,
         y: (event.pageY - elPoints.offsetTop - elPoints.offsetHeight / 2) / windowSize.y
     };
-    var originStyle =  Math.floor(100 * offset.x) + '% ' + Math.floor(100 * offset.y) + '%';
 
     elPoints.style.webkitTransform = 'rotateY(' + Math.floor(offset.x * maxAngle) + 'deg) rotateX(' + Math.floor(offset.y * maxAngle) + 'deg)';
-    elMain.style.webkitPerspectiveOrigin = originStyle;
+
+    console.log('offset', event.pageX / windowSize.x);
 }
 
 function init() {
