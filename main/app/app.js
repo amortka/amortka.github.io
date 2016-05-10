@@ -19,8 +19,6 @@ function setPerspectiveOrigin(event) {
     };
 
     elPoints.style.webkitTransform = 'rotateY(' + Math.floor(offset.x * maxAngle) + 'deg) rotateX(' + Math.floor(offset.y * maxAngle) + 'deg)';
-
-    console.log('offset', event.pageX / windowSize.x);
 }
 
 function init() {
