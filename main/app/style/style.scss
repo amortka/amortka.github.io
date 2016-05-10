@@ -170,6 +170,11 @@ ul li a:hover {
 ul li.dot-heatmap a {
   @include dot-background('dot-heatmap.png');
 }
+
 ul li.dot-points a {
   @include dot-background('dot-points.png');
+}
+
+ul li.dot-gooey a {
+  @include dot-background('dot-gooey.png');
 }
