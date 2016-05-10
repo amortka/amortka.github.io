@@ -1,0 +1,25 @@
+// ****************************************************************************
+//  colors
+// ****************************************************************************
+
+
+$color-accent: #2ecc71;
+$color-dark: #000000;
+
+$alpha-accent: 0.2;
+$alpha-dark: 0.6;
+
+// ****************************************************************************
+//  screen size
+// ****************************************************************************
+
+$min-width-xs: 480px;
+$min-width-sm: 768px;
+$min-width-md: 992px;
+$min-width-st: 1024px;
+$min-width-lg: 1200px;
+$max-width-xs: $min-width-xs - 1;
+$max-width-sm: $min-width-sm - 1;
+$max-width-md: $min-width-md - 1;
+$max-width-st: $min-width-st - 1;
+$max-width-lg: $min-width-lg - 1;
