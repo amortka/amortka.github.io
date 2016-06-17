@@ -178,3 +178,7 @@ ul li.dot-points a {
 ul li.dot-gooey a {
   @include dot-background('dot-gooey.png');
 }
+
+ul li.dot-labirynths a {
+  @include dot-background('dot-labirynths.png');
+}
