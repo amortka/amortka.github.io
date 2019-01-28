@@ -14,7 +14,7 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/3.6.3/workbox-sw.js");
 
 importScripts(
-  "/wroclove-data/precache-manifest.a7d67e3818f75f83cdfb67c209477d63.js"
+  "/wroclove-data/precache-manifest.0361f578bb3c4d36875418c8f33761f1.js"
 );
 
 workbox.clientsClaim();
