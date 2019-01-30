@@ -1,13 +1,15 @@
 {
-  "main.css": "/wroclove-data/static/css/main.c41c2671.chunk.css",
-  "main.js": "/wroclove-data/static/js/main.3d62794f.chunk.js",
-  "main.js.map": "/wroclove-data/static/js/main.3d62794f.chunk.js.map",
-  "static/js/1.d3cd842f.chunk.js": "/wroclove-data/static/js/1.d3cd842f.chunk.js",
-  "static/js/1.d3cd842f.chunk.js.map": "/wroclove-data/static/js/1.d3cd842f.chunk.js.map",
+  "main.css": "/wroclove-data/static/css/main.f9a09e32.chunk.css",
+  "main.js": "/wroclove-data/static/js/main.dd5f3e1a.chunk.js",
+  "main.js.map": "/wroclove-data/static/js/main.dd5f3e1a.chunk.js.map",
+  "static/css/1.0b0105dc.chunk.css": "/wroclove-data/static/css/1.0b0105dc.chunk.css",
+  "static/js/1.b3f34761.chunk.js": "/wroclove-data/static/js/1.b3f34761.chunk.js",
+  "static/js/1.b3f34761.chunk.js.map": "/wroclove-data/static/js/1.b3f34761.chunk.js.map",
   "runtime~main.js": "/wroclove-data/static/js/runtime~main.5e576cca.js",
   "runtime~main.js.map": "/wroclove-data/static/js/runtime~main.5e576cca.js.map",
-  "static/css/main.c41c2671.chunk.css.map": "/wroclove-data/static/css/main.c41c2671.chunk.css.map",
+  "static/css/1.0b0105dc.chunk.css.map": "/wroclove-data/static/css/1.0b0105dc.chunk.css.map",
+  "static/css/main.f9a09e32.chunk.css.map": "/wroclove-data/static/css/main.f9a09e32.chunk.css.map",
   "index.html": "/wroclove-data/index.html",
-  "precache-manifest.0361f578bb3c4d36875418c8f33761f1.js": "/wroclove-data/precache-manifest.0361f578bb3c4d36875418c8f33761f1.js",
+  "precache-manifest.29b0422091e291219ea8a75d1e920890.js": "/wroclove-data/precache-manifest.29b0422091e291219ea8a75d1e920890.js",
   "service-worker.js": "/wroclove-data/service-worker.js"
 }
