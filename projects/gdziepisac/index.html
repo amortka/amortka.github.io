@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>gdziepisac.pl — The Publication Pipeline for Polish Academia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Schibsted+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#FBFBF8;
+  --ink:#15171C;
+  --carmine:#C8102E;
+  --slate:#5B6472;
+  --line:#E3E1DA;
+  --soft:#F1F0EA;
+  --display:'Fraunces',Georgia,serif;
+  --body:'Schibsted Grotesk',-apple-system,sans-serif;
+  --mono:'IBM Plex Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);overflow:hidden;-webkit-font-smoothing:antialiased}
+
+/* ---------- deck shell ---------- */
+.deck{position:fixed;inset:0}
+.slide{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;transform:translateY(14px);transition:opacity .45s ease,transform .45s ease,visibility 0s linear .45s;padding:7vh 6vw 13vh}
+.slide.active{opacity:1;visibility:visible;transform:translateY(0);transition:opacity .45s ease,transform .45s ease,visibility 0s}
+.wrap{width:min(1060px,100%);max-height:100%;}
+
+/* staggered reveal */
+.slide .r{opacity:0}
+.slide.active .r{animation:rise .55s cubic-bezier(.2,.7,.3,1) both}
+.slide.active .r1{animation-delay:.05s}
+.slide.active .r2{animation-delay:.16s}
+.slide.active .r3{animation-delay:.27s}
+.slide.active .r4{animation-delay:.38s}
+.slide.active .r5{animation-delay:.49s}
+.slide.active .r6{animation-delay:.6s}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){
+  .slide,.slide.active .r{transition:none;animation:none!important;opacity:1!important;transform:none!important}
+}
+
+/* ---------- typography ---------- */
+.eyebrow{font-family:var(--mono);font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--carmine);margin-bottom:1.4rem;display:flex;align-items:center;gap:.7rem}
+.eyebrow::before{content:"";width:26px;height:1px;background:var(--carmine);display:inline-block}
+h1{font-family:var(--display);font-weight:500;font-size:clamp(2.1rem,4.6vw,3.7rem);line-height:1.08;letter-spacing:-.01em}
+h1 em{font-style:italic;color:var(--carmine)}
+.lead{font-size:clamp(1rem,1.5vw,1.22rem);line-height:1.55;color:var(--slate);max-width:46ch;margin-top:1.4rem}
+.kicker{font-family:var(--display);font-style:italic;font-size:clamp(1.15rem,2vw,1.5rem);margin-top:2.2rem;color:var(--ink)}
+.kicker strong{color:var(--carmine);font-style:normal;font-weight:600}
+.meta{font-family:var(--mono);font-size:.72rem;color:var(--slate);letter-spacing:.08em}
+
+/* ---------- components ---------- */
+.statrow{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin-top:2.6rem}
+.stat{background:var(--paper);padding:1.5rem 1.6rem}
+.stat b{display:block;font-family:var(--display);font-weight:500;font-size:clamp(1.7rem,3vw,2.5rem);line-height:1.1}
+.stat b sup{font-size:.45em;color:var(--carmine)}
+.stat span{display:block;margin-top:.5rem;font-size:.85rem;color:var(--slate);line-height:1.4}
+
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem;margin-top:2.4rem}
+.card{border:1px solid var(--line);background:#fff;padding:1.6rem 1.5rem;position:relative}
+.card .tag{font-family:var(--mono);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--carmine);display:block;margin-bottom:.9rem}
+.card h3{font-family:var(--display);font-weight:500;font-size:1.25rem;margin-bottom:.6rem}
+.card p{font-size:.9rem;line-height:1.55;color:var(--slate)}
+
+.list{margin-top:2rem;border-top:1px solid var(--line)}
+.list .row{display:grid;grid-template-columns:170px 1fr;gap:1.5rem;padding:1.15rem 0;border-bottom:1px solid var(--line);align-items:baseline}
+.list .row b{font-family:var(--mono);font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;color:var(--carmine)}
+.list .row p{font-size:.98rem;line-height:1.55;color:var(--ink)}
+.list .row p span{color:var(--slate)}
+
+/* stamp */
+.stamp{display:inline-block;font-family:var(--mono);font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;color:var(--carmine);border:2px solid var(--carmine);border-radius:4px;padding:.55rem 1rem;transform:rotate(-3deg);opacity:.85;mask-image:radial-gradient(circle at 30% 40%, black 92%, transparent 95%)}
+
+/* pipeline diagram */
+.pipe{margin-top:3rem;position:relative}
+.pipe .track{display:flex;justify-content:space-between;position:relative;padding-top:.4rem}
+.pipe .track::before{content:"";position:absolute;left:0;right:0;top:1.05rem;height:1px;background:var(--ink);opacity:.25}
+.pipe .node{position:relative;text-align:center;flex:1}
+.pipe .node i{display:block;width:11px;height:11px;border-radius:50%;background:var(--paper);border:2px solid var(--ink);margin:0 auto}
+.pipe .node em{display:block;font-style:normal;font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;margin-top:.8rem;color:var(--slate);text-transform:uppercase}
+.pipe .node.dark i{border-color:var(--carmine);background:var(--carmine)}
+.pipe .node.lit i{background:var(--ink)}
+.pipe .bracket{position:absolute;top:-2.1rem;left:0;width:68%;border:1px solid var(--carmine);border-bottom:none;height:1.1rem;border-radius:6px 6px 0 0}
+.pipe .bracket span{position:absolute;top:-.85rem;left:50%;transform:translateX(-50%);background:var(--paper);padding:0 .8rem;font-family:var(--mono);font-size:.66rem;letter-spacing:.16em;color:var(--carmine);text-transform:uppercase;white-space:nowrap}
+.pipe .seen{position:absolute;top:-2.1rem;right:0;width:11%;text-align:center}
+.pipe .seen span{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;color:var(--slate);text-transform:uppercase}
+
+/* product mock */
+.mockrow{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:1.2rem;margin-top:2.2rem}
+.mock{border:1px solid var(--line);background:#fff;padding:1.1rem;font-size:.74rem}
+.mock .mtitle{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--carmine);margin-bottom:.8rem;display:flex;justify-content:space-between}
+.mock .mtitle i{font-style:normal;color:var(--slate)}
+.kan{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem}
+.kan .col{background:var(--soft);padding:.5rem;border-radius:3px}
+.kan .col h5{font-family:var(--mono);font-size:.56rem;letter-spacing:.08em;color:var(--slate);text-transform:uppercase;margin-bottom:.45rem}
+.kan .kcard{background:#fff;border:1px solid var(--line);border-radius:3px;padding:.4rem .45rem;margin-bottom:.4rem;line-height:1.35}
+.kan .kcard b{display:block;font-size:.66rem;font-weight:700}
+.kan .kcard span{font-size:.58rem;color:var(--slate)}
+.kan .kcard.hot{border-left:3px solid var(--carmine)}
+.doibox{font-family:var(--mono);font-size:.66rem;border:1px dashed var(--slate);border-radius:3px;padding:.55rem .6rem;color:var(--ink);background:var(--soft)}
+.doiarrow{text-align:center;color:var(--carmine);font-size:1rem;padding:.35rem 0}
+.doiout{border:1px solid var(--line);border-radius:3px;padding:.6rem .65rem;line-height:1.5}
+.doiout b{font-size:.7rem;display:block}
+.doiout span{font-size:.6rem;color:var(--slate);display:block}
+.doiout .ok{color:var(--carmine);font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;margin-top:.35rem;display:block}
+.dash table{width:100%;border-collapse:collapse;font-size:.62rem}
+.dash th{font-family:var(--mono);font-size:.54rem;letter-spacing:.08em;text-transform:uppercase;color:var(--slate);text-align:left;padding:.3rem .3rem;border-bottom:1px solid var(--line)}
+.dash td{padding:.34rem .3rem;border-bottom:1px solid var(--soft);line-height:1.3}
+.dash td.pts{font-family:var(--mono);color:var(--carmine);font-weight:500}
+.dash .pill{display:inline-block;font-family:var(--mono);font-size:.52rem;letter-spacing:.06em;border:1px solid var(--line);border-radius:99px;padding:.08rem .4rem;color:var(--slate);text-transform:uppercase}
+.dash .pill.acc{border-color:var(--carmine);color:var(--carmine)}
+
+/* tiers */
+.tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem;margin-top:2.2rem;align-items:stretch}
+.tier{border:1px solid var(--line);background:#fff;padding:1.6rem 1.5rem;display:flex;flex-direction:column}
+.tier.feature{border-color:var(--ink);box-shadow:6px 6px 0 var(--soft)}
+.tier .who{font-family:var(--mono);font-size:.64rem;letter-spacing:.14em;text-transform:uppercase;color:var(--slate)}
+.tier .price{font-family:var(--display);font-weight:500;font-size:1.9rem;margin:.7rem 0 .2rem}
+.tier .price small{font-family:var(--body);font-size:.78rem;color:var(--slate);font-weight:400}
+.tier ul{list-style:none;margin-top:1rem;flex:1}
+.tier li{font-size:.85rem;color:var(--ink);padding:.38rem 0 .38rem 1.2rem;position:relative;line-height:1.45}
+.tier li::before{content:"—";position:absolute;left:0;color:var(--carmine)}
+.tier .note{margin-top:1rem;font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;color:var(--carmine);text-transform:uppercase}
+
+/* competition table */
+table.comp{width:100%;border-collapse:collapse;margin-top:2.2rem}
+table.comp th{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--slate);text-align:left;padding:.7rem .9rem;border-bottom:2px solid var(--ink)}
+table.comp td{padding:1rem .9rem;border-bottom:1px solid var(--line);font-size:.92rem;line-height:1.5;vertical-align:top}
+table.comp td:first-child{font-weight:700;white-space:nowrap}
+table.comp td:nth-child(2){color:var(--slate)}
+table.comp td:last-child{color:var(--ink)}
+table.comp td:last-child::before{content:"→ ";color:var(--carmine)}
+
+/* split */
+.split{display:grid;grid-template-columns:1fr 1fr;gap:2.5rem;margin-top:2.4rem}
+.split .box{border-top:2px solid var(--ink);padding-top:1.2rem}
+.split .box.red{border-top-color:var(--carmine)}
+.split .box h3{font-family:var(--display);font-weight:500;font-size:1.35rem;margin-bottom:.7rem}
+.split .box p{font-size:.93rem;line-height:1.6;color:var(--slate)}
+.split .box .cta{display:inline-block;margin-top:1.1rem;font-family:var(--mono);font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--paper);background:var(--ink);padding:.7rem 1.1rem}
+.split .box.red .cta{background:var(--carmine)}
+
+/* doi watermark */
+.doimark{position:absolute;bottom:11vh;right:6vw;font-family:var(--mono);font-size:.64rem;letter-spacing:.1em;color:var(--line);user-select:none}
+
+/* ---------- chrome / UI ---------- */
+.ui{position:fixed;left:0;right:0;bottom:0;padding:1.1rem 2.2rem 1.3rem;display:flex;align-items:flex-end;gap:2rem;z-index:50;background:linear-gradient(transparent,var(--paper) 55%)}
+.counter{font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;color:var(--slate);min-width:120px}
+.counter b{color:var(--carmine);font-weight:500}
+.rail{flex:1;position:relative;height:26px}
+.rail .base{position:absolute;left:0;right:0;top:12px;height:1px;background:var(--line)}
+.rail .fill{position:absolute;left:0;top:12px;height:1px;background:var(--carmine);transition:width .4s ease}
+.rail .ticks{position:absolute;inset:0;display:flex;justify-content:space-between}
+.rail .tick{width:9px;height:9px;border-radius:50%;border:1px solid var(--line);background:var(--paper);margin-top:8px;cursor:pointer;transition:.25s;padding:0;appearance:none}
+.rail .tick.done{background:var(--carmine);border-color:var(--carmine)}
+.rail .tick.now{background:var(--paper);border:2px solid var(--carmine);transform:scale(1.25)}
+.rail .tick:focus-visible{outline:2px solid var(--carmine);outline-offset:2px}
+.navbtns{display:flex;gap:.5rem}
+.navbtns button{font-family:var(--mono);width:38px;height:38px;border:1px solid var(--line);background:var(--paper);color:var(--ink);font-size:.95rem;cursor:pointer;transition:.2s}
+.navbtns button:hover{border-color:var(--carmine);color:var(--carmine)}
+.navbtns button:focus-visible{outline:2px solid var(--carmine);outline-offset:2px}
+.hint{position:fixed;bottom:4.6rem;right:2.4rem;font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;color:var(--slate);text-transform:uppercase;animation:pulse 2.4s infinite;z-index:40}
+@keyframes pulse{0%,100%{opacity:.35}50%{opacity:1}}
+
+/* responsive */
+@media (max-width:840px){
+  .slide{padding:5vh 6vw 15vh}
+  .statrow,.cards,.tiers,.mockrow,.split{grid-template-columns:1fr;gap:.9rem}
+  .list .row{grid-template-columns:1fr;gap:.3rem}
+  .pipe .node em{font-size:.5rem}
+  .pipe .bracket span{font-size:.55rem}
+  table.comp td:nth-child(2){display:none}
+  table.comp th:nth-child(2){display:none}
+  .mock.hidemob{display:none}
+  .counter{display:none}
+  .doimark{display:none}
+  h1{font-size:1.7rem}
+  .wrap{overflow-y:auto;max-height:78vh}
+}
+
+/* print: all slides flat */
+@media print{
+  body{overflow:visible}
+  .deck{position:static}
+  .slide{position:static;opacity:1!important;visibility:visible!important;transform:none!important;page-break-after:always;min-height:95vh}
+  .slide .r{opacity:1!important;animation:none!important}
+  .ui,.hint{display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="deck" id="deck">
+
+<!-- 01 · COVER -->
+<section class="slide" data-stage="IDEA">
+  <div class="wrap">
+    <div class="eyebrow r r1">gdziepisac.pl · platforma</div>
+    <h1 class="r r2">Research output,<br>visible <em>before</em> the DOI exists.</h1>
+    <p class="lead r r3">The platform where Polish researchers plan, track and publish their articles — and where their institutions finally see what's coming, not just what happened.</p>
+    <div class="r r4" style="margin-top:2.6rem"><span class="stamp">Lista MNiSW · 34 088 czasopism · indexed</span></div>
+  </div>
+  <div class="doimark">doi:10.5281/pipeline.2026.001</div>
+</section>
+
+<!-- 02 · PAIN: INSTITUTION -->
+<section class="slide" data-stage="WRITING">
+  <div class="wrap">
+    <div class="eyebrow r r1">The problem · for institutions</div>
+    <h1 class="r r2">You learn about your researchers' publications <em>months after</em> the world does.</h1>
+    <p class="lead r r3">PBN, repositories, annual surveys — every system you have records the past. Between an article's first draft and its DOI lie 6–18 months in which the institution sees nothing at all.</p>
+    <div class="statrow r r4">
+      <div class="stat"><b>6–18<sup> mo</sup></b><span>of pipeline darkness per article, from submission to indexed publication</span></div>
+      <div class="stat"><b>100%</b><span>manual data collection — emails, forms, spreadsheets, reminders</span></div>
+      <div class="stat"><b>0</b><span>forward visibility into what your faculty will publish next year</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 03 · STAKES -->
+<section class="slide" data-stage="WRITING">
+  <div class="wrap">
+    <div class="eyebrow r r1">What the blind spot costs</div>
+    <h1 class="r r2">This isn't an inconvenience.<br>It's <em>funding and accreditation</em>.</h1>
+    <div class="list r r3">
+      <div class="row"><b>Ewaluacja</b><p>Your scientific category drives the subwencja. Fall below B+ and a discipline <span>loses the right to award doctoral degrees.</span></p></div>
+      <div class="row"><b>PKA</b><p>Program accreditation reviews demand complete, current publication evidence — <span>assembled today by hand, under deadline.</span></p></div>
+      <div class="row"><b>Admin cost</b><p>Weeks of staff time per cycle spent chasing researchers for data <span>that already exists — in their inboxes and private spreadsheets.</span></p></div>
+      <div class="row"><b>Strategy</b><p>Deans steering disciplines with a rearview mirror: <span>by the time output gaps appear in PBN, the evaluation window is closing.</span></p></div>
+    </div>
+    <p class="kicker r r4">The data exists. It just lives where you can't see it.</p>
+  </div>
+</section>
+
+<!-- 04 · PAIN: RESEARCHER -->
+<section class="slide" data-stage="WRITING">
+  <div class="wrap">
+    <div class="eyebrow r r1">The problem · for researchers</div>
+    <h1 class="r r2">Your data source is a person<br>with <em>better things to do</em>.</h1>
+    <p class="lead r r3">A typical academic has 3–8 manuscripts in flight. Their tooling: the ministry's 34,088-row spreadsheet, a private Excel file, inbox archaeology — and your reporting form, filled in late and under protest.</p>
+    <div class="cards r r4">
+      <div class="card"><span class="tag">Finding a journal</span><h3>Ministry XLSX + guesswork</h3><p>Shifting point values, 34,088 rows, no filters that match how researchers actually choose.</p></div>
+      <div class="card"><span class="tag">Tracking articles</span><h3>Memory &amp; inbox</h3><p>Submissions, revisions, decisions — scattered across email threads with five different journals.</p></div>
+      <div class="card"><span class="tag">Reporting to you</span><h3>The resented form</h3><p>Retyping metadata that already exists in CrossRef. Every cycle. For every affiliation.</p></div>
+    </div>
+    <p class="kicker r r5">Bad institutional data isn't a discipline problem. It's a <strong>tooling</strong> problem.</p>
+  </div>
+</section>
+
+<!-- 05 · INSIGHT -->
+<section class="slide" data-stage="SUBMITTED">
+  <div class="wrap">
+    <div class="eyebrow r r1">The insight</div>
+    <h1 class="r r2">Everything before the DOI<br>is <em>dark</em>.</h1>
+    <div class="pipe r r3">
+      <div class="bracket"><span>invisible to every existing system</span></div>
+      <div class="seen"><span>PBN sees this</span></div>
+      <div class="track">
+        <div class="node dark"><i></i><em>Idea</em></div>
+        <div class="node dark"><i></i><em>Writing</em></div>
+        <div class="node dark"><i></i><em>Submitted</em></div>
+        <div class="node dark"><i></i><em>In review</em></div>
+        <div class="node dark"><i></i><em>Accepted</em></div>
+        <div class="node lit"><i></i><em>Published</em></div>
+      </div>
+    </div>
+    <p class="kicker r r4" style="margin-top:3.2rem">Whoever owns the pipeline owns the <strong>freshest research data in the country</strong>. We built the tool researchers open the day they get an idea.</p>
+  </div>
+</section>
+
+<!-- 06 · SOLUTION -->
+<section class="slide" data-stage="SUBMITTED">
+  <div class="wrap">
+    <div class="eyebrow r r1">The solution</div>
+    <h1 class="r r2">One platform.<br>Both sides of the desk.</h1>
+    <div class="cards r r3">
+      <div class="card"><span class="tag">For researchers · free</span><h3>Plan &amp; track</h3><p>Search all 34,088 MNiSW journals by points, discipline, SJR. Keep a target shortlist. Run every article through a personal pipeline board.</p></div>
+      <div class="card"><span class="tag">The bridge</span><h3>Paste a DOI. Done.</h3><p>One DOI pulls complete metadata from CrossRef in seconds — title, authors, journal, points. Zero retyping, ever. Sharing with the institution is one click, writer-controlled.</p></div>
+      <div class="card"><span class="tag">For institutions</span><h3>See &amp; report</h3><p>A live dashboard of affiliated output — including what's submitted and accepted but not yet published. Audit-ready exports for ewaluacja and PKA.</p></div>
+    </div>
+    <p class="kicker r r4">Researchers get a tool they <strong>want</strong>. You get the data you've been <strong>chasing</strong>.</p>
+  </div>
+</section>
+
+<!-- 07 · PRODUCT -->
+<section class="slide" data-stage="SUBMITTED">
+  <div class="wrap">
+    <div class="eyebrow r r1">How it works</div>
+    <h1 class="r r2">Three minutes from idea<br>to <em>institutional visibility</em>.</h1>
+    <div class="mockrow r r3">
+      <div class="mock">
+        <div class="mtitle">01 · Researcher's pipeline <i>kanban</i></div>
+        <div class="kan">
+          <div class="col"><h5>Writing</h5>
+            <div class="kcard"><b>Heuristics in EU AI Act audits</b><span>target: AI &amp; Society · 140 pkt</span></div>
+          </div>
+          <div class="col"><h5>In review</h5>
+            <div class="kcard hot"><b>RODO in clinical trials</b><span>Computer Law Rev. · 100 pkt</span></div>
+            <div class="kcard"><b>Funnel UX patterns</b><span>Interact. Comput. · 100 pkt</span></div>
+          </div>
+          <div class="col"><h5>Accepted</h5>
+            <div class="kcard"><b>LLM citation drift</b><span>add DOI when live →</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="mock">
+        <div class="mtitle">02 · DOI import <i>crossref</i></div>
+        <div class="doibox">10.1016/j.respol.2026.10499</div>
+        <div class="doiarrow">↓</div>
+        <div class="doiout">
+          <b>LLM citation drift in scholarly metadata</b>
+          <span>Kowalski A., Nowak M. · Research Policy</span>
+          <span>Elsevier · 2026 · ISSN 0048-7333 · 200 pkt</span>
+          <span class="ok">✓ imported in 3 s · 0 fields typed</span>
+        </div>
+      </div>
+      <div class="mock dash hidemob">
+        <div class="mtitle">03 · Institution view <i>live</i></div>
+        <table>
+          <tr><th>Researcher</th><th>Article</th><th>Pkt</th><th>Status</th></tr>
+          <tr><td>Kowalski A.</td><td>LLM citation drift…</td><td class="pts">200</td><td><span class="pill acc">accepted</span></td></tr>
+          <tr><td>Nowak M.</td><td>RODO in clinical…</td><td class="pts">100</td><td><span class="pill">in review</span></td></tr>
+          <tr><td>Wiśniewska K.</td><td>Heuristics in EU…</td><td class="pts">140</td><td><span class="pill">writing</span></td></tr>
+          <tr><td colspan="4" style="font-family:var(--mono);font-size:.56rem;color:var(--carmine);letter-spacing:.08em;padding-top:.5rem">⤓ EXPORT CSV · EWALUACJA FORMAT</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 08 · WHY ADOPTION WORKS -->
+<section class="slide" data-stage="IN REVIEW">
+  <div class="wrap">
+    <div class="eyebrow r r1">Why this works where portals failed</div>
+    <h1 class="r r2">Researchers don't fill forms here.<br>They <em>came on their own</em>.</h1>
+    <div class="list r r3">
+      <div class="row"><b>They're already here</b><p>Researchers find gdziepisac.pl organically when choosing where to publish. <span>We convert a search they already perform — no mandate, no training, no rollout.</span></p></div>
+      <div class="row"><b>Personally useful</b><p>The pipeline board, watchlist and DOI autofill serve the researcher first. <span>Reporting to you becomes a by-product of a tool they'd use anyway.</span></p></div>
+      <div class="row"><b>Trust by design</b><p>Sharing is per-article, writer-controlled, revocable. GDPR architecture by a certified IOD/auditor. <span>Researchers share because they're in control — that's why the data flows.</span></p></div>
+      <div class="row"><b>Nothing to migrate</b><p>No integration project, no IT procurement to start. <span>Your researchers bring the data with them. You claim a dashboard.</span></p></div>
+    </div>
+    <p class="kicker r r4">Your data collection problem <strong>solves itself</strong>.</p>
+  </div>
+</section>
+
+<!-- 09 · UNFAIR ADVANTAGE -->
+<section class="slide" data-stage="IN REVIEW">
+  <div class="wrap">
+    <div class="eyebrow r r1">Traction &amp; unfair advantage</div>
+    <h1 class="r r2">We didn't start from zero.<br>We started from <em>the search bar</em>.</h1>
+    <div class="statrow r r3">
+      <div class="stat"><b>Live</b><span>gdziepisac.pl is in production today, with organic researcher traffic at zero acquisition cost</span></div>
+      <div class="stat"><b>34 088</b><span>MNiSW journals indexed and maintained — points, ISSN, disciplines, SJR, H-index</span></div>
+      <div class="stat"><b>SEO moat</b><span>ranking on the exact queries researchers type at the moment of journal choice</span></div>
+    </div>
+    <div class="list r r4">
+      <div class="row"><b>Founder fit</b><p>Built by a fullstack engineer with 20+ years shipping products — and certified IOD/auditor credentials. <span>In a sector where data protection objections kill deals, compliance here is a selling point, not a checkbox.</span></p></div>
+      <div class="row"><b>Distribution built in</b><p>Every searcher is a potential account; every account that shares an article recruits its institution. <span>Writers are the salesforce.</span></p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 10 · MARKET -->
+<section class="slide" data-stage="IN REVIEW">
+  <div class="wrap">
+    <div class="eyebrow r r1">The market</div>
+    <h1 class="r r2">A national system,<br>renewed by <em>law</em>, every cycle.</h1>
+    <div class="statrow r r3">
+      <div class="stat"><b>≈360</b><span>higher-education institutions in Poland, every one subject to evaluation pressure</span></div>
+      <div class="stat"><b>≈93 000</b><span>academic staff — each one a free user, a data source, and an institutional advocate</span></div>
+      <div class="stat"><b>Recurring</b><span>ewaluacja and PKA cycles are mandated by statute — demand renews itself</span></div>
+    </div>
+    <p class="lead r r4" style="max-width:60ch">Bottom-up entry math: 500 paying faculties and units at ≈12,000 PLN/year is a ≈6 M PLN ARR opportunity in Poland alone — before CEE expansion, where every country runs its own ministry list and evaluation regime on the same broken workflow.</p>
+    <p class="kicker r r5">Poland is the wedge. The pipeline problem is <strong>European</strong>.</p>
+  </div>
+</section>
+
+<!-- 11 · BUSINESS MODEL -->
+<section class="slide" data-stage="ACCEPTED">
+  <div class="wrap">
+    <div class="eyebrow r r1">Business model</div>
+    <h1 class="r r2">Free where it spreads.<br>Paid where it <em>saves careers</em>.</h1>
+    <div class="tiers r r3">
+      <div class="tier">
+        <span class="who">Researchers</span>
+        <div class="price">Free <small>forever</small></div>
+        <ul>
+          <li>Journal search &amp; watchlist</li>
+          <li>Pipeline board</li>
+          <li>DOI import &amp; autofill</li>
+          <li>Writer-controlled sharing</li>
+        </ul>
+        <span class="note">Acquisition, never revenue</span>
+      </div>
+      <div class="tier">
+        <span class="who">Institution · Start</span>
+        <div class="price">Free</div>
+        <ul>
+          <li>Live shared-articles dashboard</li>
+          <li>Pipeline visibility</li>
+          <li>CSV export</li>
+          <li>1 admin seat</li>
+        </ul>
+        <span class="note">Claim in minutes, no procurement</span>
+      </div>
+      <div class="tier feature">
+        <span class="who">Institution · Pro</span>
+        <div class="price">1 000 PLN <small>/ faculty / month</small></div>
+        <ul>
+          <li>Department &amp; group structure</li>
+          <li>Ewaluacja &amp; PKA report formats</li>
+          <li>Email digests, multi-admin</li>
+          <li>Onboarding &amp; bulk import</li>
+        </ul>
+        <span class="note">Less than one day of admin overtime</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 12 · COMPETITION -->
+<section class="slide" data-stage="ACCEPTED">
+  <div class="wrap">
+    <div class="eyebrow r r1">Landscape</div>
+    <h1 class="r r2">We feed the existing systems.<br>We don't <em>fight</em> them.</h1>
+    <table class="comp r r3">
+      <tr><th>System</th><th>What it is</th><th>Where we stand</th></tr>
+      <tr><td>PBN / POL-on</td><td>Mandatory national registry of published work</td><td>We cover everything before publication, and hand you clean data to report into it</td></tr>
+      <tr><td>Omega-PSIR &amp; repositories</td><td>Institution-owned archives, librarian-operated, top-down</td><td>Researcher-first and bottom-up — adoption without a rollout project</td></tr>
+      <tr><td>ORCID</td><td>Researcher identity and publication list</td><td>No pipeline, no MNiSW points, no institutional reporting — complementary, not competing</td></tr>
+      <tr><td>Excel &amp; email</td><td>The real incumbent</td><td>DOI autofill beats retyping; one shared board beats a hundred reminder emails</td></tr>
+    </table>
+    <p class="kicker r r4">The category we're creating is empty: <strong>the system of record for research before it's published</strong>.</p>
+  </div>
+</section>
+
+<!-- 13 · VISION + ASK -->
+<section class="slide" data-stage="PUBLISHED">
+  <div class="wrap">
+    <div class="eyebrow r r1">The ask</div>
+    <h1 class="r r2">Be the institution that sees its science <em>first</em>.</h1>
+    <div class="split r r3">
+      <div class="box red">
+        <h3>For institutions — founding pilot</h3>
+        <p>We're selecting <b>three universities</b> as founding partners. Free for the pilot period, white-glove onboarding, and a direct hand in shaping the exact reports your ewaluacja and PKA teams will rely on. Your researchers can be on the platform this semester.</p>
+        <a class="cta" href="#" onclick="return false">Join the founding pilot</a>
+      </div>
+      <div class="box">
+        <h3>For investors</h3>
+        <p>Bottom-up SaaS with built-in distribution, a national-scale proprietary dataset growing daily, statutory recurring demand — and a repeatable playbook for every evaluation regime in Central Europe.</p>
+        <a class="cta" href="#" onclick="return false">Start the conversation</a>
+      </div>
+    </div>
+    <div class="r r4" style="margin-top:3rem;display:flex;align-items:center;gap:2rem;flex-wrap:wrap">
+      <span class="stamp">Founding pilot · 2026 · 3 seats</span>
+      <span class="meta">gdziepisac.pl &nbsp;·&nbsp; kontakt@gdziepisac.pl</span>
+    </div>
+  </div>
+  <div class="doimark">status: published ✓</div>
+</section>
+
+</div>
+
+<!-- chrome -->
+<div class="hint" id="hint">Press → to begin</div>
+<div class="ui">
+  <div class="counter"><b id="cStage">IDEA</b> · <span id="cNum">01 / 13</span></div>
+  <div class="rail">
+    <div class="base"></div>
+    <div class="fill" id="railFill"></div>
+    <div class="ticks" id="ticks"></div>
+  </div>
+  <div class="navbtns">
+    <button id="prev" aria-label="Previous slide">←</button>
+    <button id="next" aria-label="Next slide">→</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var ticksEl = document.getElementById('ticks');
+  var fill = document.getElementById('railFill');
+  var cNum = document.getElementById('cNum');
+  var cStage = document.getElementById('cStage');
+  var hint = document.getElementById('hint');
+  var cur = 0, n = slides.length;
+
+  slides.forEach(function(s,i){
+    var t = document.createElement('button');
+    t.className = 'tick';
+    t.setAttribute('aria-label','Slide '+(i+1)+' — '+s.dataset.stage);
+    t.addEventListener('click',function(){ go(i); });
+    ticksEl.appendChild(t);
+  });
+  var ticks = Array.prototype.slice.call(ticksEl.children);
+
+  function pad(x){ return (x<10?'0':'')+x; }
+
+  function go(i){
+    if(i<0||i>=n||i===cur&&slides[cur].classList.contains('active')) {}
+    i = Math.max(0, Math.min(n-1, i));
+    slides[cur].classList.remove('active');
+    cur = i;
+    slides[cur].classList.add('active');
+    cNum.textContent = pad(cur+1)+' / '+pad(n);
+    cStage.textContent = slides[cur].dataset.stage;
+    fill.style.width = (cur/(n-1)*100)+'%';
+    ticks.forEach(function(t,k){
+      t.classList.toggle('done', k<cur);
+      t.classList.toggle('now', k===cur);
+    });
+    if(cur>0 && hint){ hint.style.display='none'; }
+  }
+
+  function next(){ go(cur+1); }
+  function prev(){ go(cur-1); }
+
+  document.getElementById('next').addEventListener('click',next);
+  document.getElementById('prev').addEventListener('click',prev);
+
+  document.addEventListener('keydown',function(e){
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){ e.preventDefault(); next(); }
+    else if(e.key==='ArrowLeft'||e.key==='PageUp'){ e.preventDefault(); prev(); }
+    else if(e.key==='Home'){ go(0); }
+    else if(e.key==='End'){ go(n-1); }
+  });
+
+  // touch swipe
+  var x0=null;
+  document.addEventListener('touchstart',function(e){ x0=e.touches[0].clientX; },{passive:true});
+  document.addEventListener('touchend',function(e){
+    if(x0===null) return;
+    var dx = e.changedTouches[0].clientX - x0;
+    if(Math.abs(dx)>50){ dx<0?next():prev(); }
+    x0=null;
+  },{passive:true});
+
+  go(0);
+})();
+</script>
+</body>
+</html>
