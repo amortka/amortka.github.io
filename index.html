@@ -4,100 +4,409 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Adam Mortka</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
             overflow: hidden;
-            background: #f5f0e8;
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background: #f2ece3;
+            font-family: 'Inter', -apple-system, sans-serif;
+            color: #1a1a18;
+            -webkit-font-smoothing: antialiased;
         }
-        canvas {
-            display: block;
+
+        canvas#topo {
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
+            z-index: 0;
         }
-        .overlay {
+
+        .ui {
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            z-index: 10;
             pointer-events: none;
-            z-index: 10;
         }
-        .name {
-            font-size: clamp(2rem, 6vw, 5rem);
-            font-weight: 200;
-            letter-spacing: 0.15em;
-            color: #2a1f0e;
-            text-transform: uppercase;
-            mix-blend-mode: multiply;
-            opacity: 0.85;
-        }
-        .subtitle {
-            margin-top: 0.5em;
-            font-size: clamp(0.7rem, 1.5vw, 1rem);
-            font-weight: 400;
-            letter-spacing: 0.4em;
-            color: #8b5e2f;
-            text-transform: uppercase;
-            mix-blend-mode: multiply;
-            opacity: 0.6;
-        }
-        .nav {
-            position: fixed;
-            bottom: 2rem;
-            left: 50%;
-            transform: translateX(-50%);
+
+        /* Top bar */
+        .top-bar {
+            position: absolute;
+            top: 0; left: 0; right: 0;
             display: flex;
-            gap: 2rem;
-            z-index: 10;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.8rem 2.5rem;
+        }
+
+        .logo {
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            font-size: 0.8rem;
+            letter-spacing: 0.08em;
+            opacity: 0;
+        }
+
+        .logo span {
+            font-weight: 300;
+            opacity: 0.4;
+            margin-left: 0.4em;
+            font-size: 0.7rem;
+        }
+
+        nav {
+            display: flex;
+            gap: 2.5rem;
             pointer-events: all;
         }
-        .nav a {
-            font-size: 0.75rem;
-            letter-spacing: 0.3em;
+
+        nav a {
+            font-size: 0.65rem;
+            font-weight: 500;
+            letter-spacing: 0.18em;
             text-transform: uppercase;
-            color: #6b4420;
+            color: #1a1a18;
             text-decoration: none;
-            opacity: 0.5;
-            transition: opacity 0.3s;
-            font-weight: 400;
+            opacity: 0;
+            transition: opacity 0.4s ease;
         }
-        .nav a:hover { opacity: 1; }
+
+        nav a:hover { opacity: 0.5 !important; }
+
+        .time {
+            font-size: 0.65rem;
+            font-weight: 400;
+            letter-spacing: 0.1em;
+            color: #c45a2d;
+            opacity: 0;
+        }
+
+        /* Hero */
+        .hero {
+            position: absolute;
+            top: 50%;
+            left: 2.5rem;
+            transform: translateY(-55%);
+        }
+
+        .hero-label {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            margin-bottom: 1.2rem;
+            opacity: 0;
+        }
+
+        .hero-label .dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #c45a2d;
+        }
+
+        .hero-label span {
+            font-size: 0.6rem;
+            font-weight: 500;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            color: #6b6560;
+        }
+
+        .hero-name {
+            font-family: 'Playfair Display', serif;
+            font-weight: 900;
+            font-size: clamp(4rem, 12vw, 11rem);
+            line-height: 0.88;
+            letter-spacing: -0.02em;
+            color: #1a1a18;
+            overflow: hidden;
+        }
+
+        .hero-name .line {
+            display: block;
+            overflow: hidden;
+        }
+
+        .hero-name .line-inner {
+            display: block;
+            transform: translateY(110%);
+        }
+
+        .hero-surname {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-style: italic;
+            font-size: clamp(3.5rem, 10vw, 9rem);
+            line-height: 0.95;
+            letter-spacing: -0.01em;
+            color: #c45a2d;
+            margin-top: 0.05em;
+            overflow: hidden;
+        }
+
+        .hero-surname .line {
+            display: block;
+            overflow: hidden;
+        }
+
+        .hero-surname .line-inner {
+            display: block;
+            transform: translateY(110%);
+        }
+
+        /* Right text */
+        .tagline {
+            position: absolute;
+            right: 2.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            text-align: right;
+            opacity: 0;
+        }
+
+        .tagline p {
+            font-size: 0.9rem;
+            font-weight: 300;
+            line-height: 1.7;
+            color: #4a4540;
+        }
+
+        /* Bottom bar */
+        .bottom-bar {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.8rem 2.5rem;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            opacity: 0;
+        }
+
+        .status .dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #c45a2d;
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .status span {
+            font-size: 0.6rem;
+            font-weight: 500;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: #6b6560;
+        }
+
+        .coords {
+            font-size: 0.6rem;
+            font-weight: 400;
+            letter-spacing: 0.15em;
+            color: #9b9590;
+            opacity: 0;
+        }
+
+        .scroll-hint {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            opacity: 0;
+            pointer-events: all;
+            cursor: pointer;
+        }
+
+        .scroll-hint span {
+            font-size: 0.6rem;
+            font-weight: 500;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: #6b6560;
+        }
+
+        .scroll-hint .arrow {
+            font-size: 0.7rem;
+            color: #6b6560;
+        }
+
+        /* Red cursor dot */
+        .cursor-dot {
+            position: fixed;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #c45a2d;
+            pointer-events: none;
+            z-index: 100;
+            opacity: 0;
+            transform: translate(-50%, -50%);
+        }
+
+        /* Tablet */
+        @media (max-width: 1024px) {
+            .tagline { display: none; }
+            .hero-name { font-size: clamp(3rem, 10vw, 7rem); }
+            .hero-surname { font-size: clamp(2.5rem, 8vw, 6rem); }
+        }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+            .tagline { display: none; }
+            .hero {
+                left: 1.2rem;
+                right: 1.2rem;
+                transform: translateY(-50%);
+            }
+            .hero-name { font-size: clamp(2.8rem, 14vw, 5rem); }
+            .hero-surname { font-size: clamp(2.2rem, 12vw, 4.5rem); }
+            .hero-label span { font-size: 0.5rem; }
+            .top-bar {
+                padding: 1.2rem 1.2rem;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+            .bottom-bar {
+                padding: 1.2rem 1.2rem;
+                flex-wrap: wrap;
+                gap: 0.8rem;
+            }
+            nav { gap: 1.2rem; }
+            nav a { font-size: 0.55rem; }
+            .logo { font-size: 0.7rem; }
+            .time { font-size: 0.55rem; }
+            .status span, .coords, .scroll-hint span { font-size: 0.5rem; }
+            .cursor-dot { display: none; }
+        }
+
+        /* Small mobile */
+        @media (max-width: 400px) {
+            .hero-name { font-size: clamp(2rem, 16vw, 3.5rem); }
+            .hero-surname { font-size: clamp(1.8rem, 14vw, 3rem); }
+            .top-bar { flex-direction: column; align-items: flex-start; gap: 0.6rem; }
+            .coords { display: none; }
+            .scroll-hint { display: none; }
+        }
     </style>
 </head>
 <body>
-    <canvas id="gl"></canvas>
-    <div class="overlay">
-        <div class="name">Adam Mortka</div>
-        <div class="subtitle">Creative Developer</div>
-    </div>
-    <div class="nav">
-        <a href="projects/gdziepisac/">Projects</a>
+    <canvas id="topo"></canvas>
+
+    <div class="cursor-dot" id="cursorDot"></div>
+
+    <div class="ui">
+        <div class="top-bar">
+            <div class="logo">A.M<span>2026</span></div>
+            <!-- <nav>
+                <a href="projects/gdziepisac/">WORK</a>
+                <a href="#">ABOUT</a>
+                <a href="#">CONTACT</a>
+            </nav> -->
+            <div class="time" id="clock"></div>
+        </div>
+
+        <div class="hero">
+            <div class="hero-label">
+                <div class="dot"></div>
+                <span>Creative Developer</span>
+            </div>
+            <div class="hero-name">
+                <span class="line"><span class="line-inner">ADAM</span></span>
+            </div>
+            <div class="hero-surname">
+                <span class="line"><span class="line-inner">Mortka</span></span>
+            </div>
+        </div>
+
+        <div class="tagline">
+            <p>Crafting digital<br>experiences with code.</p>
+        </div>
+
+        <div class="bottom-bar">
+            <div class="status">
+                <div class="dot"></div>
+                <span>Available for projects</span>
+            </div>
+            <div class="coords">51.1079&deg; N / 17.0385&deg; E</div>
+            <div class="scroll-hint">
+                <span>Explore</span>
+                <span class="arrow">&darr;</span>
+            </div>
+        </div>
     </div>
 
-<script>
-const canvas = document.getElementById('gl');
-const gl = canvas.getContext('webgl', { antialias: true, alpha: false });
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script>
+// ── Clock ──
+function updateClock() {
+    const now = new Date();
+    const h = String(now.getHours()).padStart(2, '0');
+    const m = String(now.getMinutes()).padStart(2, '0');
+    document.getElementById('clock').textContent = h + ' : ' + m + '  WROCŁAW, PL';
+}
+updateClock();
+setInterval(updateClock, 10000);
 
-const vertSrc = `
-attribute vec2 a_pos;
+// ── Cursor dot ──
+const cursorDot = document.getElementById('cursorDot');
+let cursorX = window.innerWidth / 2, cursorY = window.innerHeight / 2;
+let dotX = cursorX, dotY = cursorY;
+
+document.addEventListener('mousemove', e => {
+    cursorX = e.clientX;
+    cursorY = e.clientY;
+});
+
+function animateDot() {
+    dotX += (cursorX - dotX) * 0.08;
+    dotY += (cursorY - dotY) * 0.08;
+    cursorDot.style.left = dotX + 'px';
+    cursorDot.style.top = dotY + 'px';
+    requestAnimationFrame(animateDot);
+}
+animateDot();
+
+// ── Three.js Topo Shader ──
+const canvas = document.getElementById('topo');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+
+const scene = new THREE.Scene();
+const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+
+const vertexShader = `
+varying vec2 vUv;
 void main() {
-    gl_Position = vec4(a_pos, 0.0, 1.0);
+    vUv = uv;
+    gl_Position = vec4(position, 1.0);
 }`;
 
-const fragSrc = `
+const fragmentShader = `
 precision highp float;
 
+varying vec2 vUv;
 uniform vec2 u_resolution;
 uniform float u_time;
 uniform vec2 u_mouse;
 
-// Simplex-like noise
+//
+// Simplex 2D noise
+//
 vec3 mod289(vec3 x) { return x - floor(x * (1.0/289.0)) * 289.0; }
 vec2 mod289(vec2 x) { return x - floor(x * (1.0/289.0)) * 289.0; }
 vec3 permute(vec3 x) { return mod289(((x*34.0)+1.0)*x); }
@@ -125,162 +434,198 @@ float snoise(vec2 v) {
     return 130.0 * dot(m, g);
 }
 
+// Smooth FBM with domain rotation — 5 octaves, low base frequency
 float fbm(vec2 p) {
     float val = 0.0;
     float amp = 0.5;
-    float freq = 1.0;
-    for (int i = 0; i < 6; i++) {
-        val += amp * snoise(p * freq);
-        freq *= 2.0;
+    mat2 rot = mat2(0.866, 0.5, -0.5, 0.866);
+    for (int i = 0; i < 5; i++) {
+        val += amp * snoise(p);
+        p = rot * p * 2.0;
         amp *= 0.5;
     }
     return val;
 }
 
 void main() {
-    vec2 uv = gl_FragCoord.xy / u_resolution;
-    vec2 aspect = vec2(u_resolution.x / u_resolution.y, 1.0);
-    vec2 p = uv * aspect;
+    vec2 uv = vUv;
+    float ar = u_resolution.x / u_resolution.y;
+    vec2 p = vec2(uv.x * ar, uv.y);
 
-    // Mouse influence
-    vec2 mouse = u_mouse * aspect;
-    float mouseDist = length(p - mouse);
-    float mouseInfluence = exp(-mouseDist * 2.5) * 0.6;
+    // Mouse in aspect space
+    vec2 mouse = vec2(u_mouse.x * ar, u_mouse.y);
+    vec2 toMouse = p - mouse;
+    float mDist = length(toMouse);
 
-    // Animated terrain
-    float t = u_time * 0.08;
-    vec2 offset = vec2(t * 0.3, t * 0.2);
+    // Continuous slow drift — terrain always morphing
+    float t = u_time * 0.06;
 
-    // Warp space near cursor
-    vec2 warp = p + vec2(
-        snoise(p * 1.5 + offset) * 0.15,
-        snoise(p * 1.5 + offset + 100.0) * 0.15
+    // Mouse deforms terrain — pushes contours away like a hill rising under cursor
+    float mouseRadius = exp(-mDist * mDist * 4.0);  // gaussian falloff
+    vec2 mouseWarp = -toMouse * mouseRadius * 0.35;  // push outward from cursor
+    float mouseElevation = mouseRadius * 0.4;        // raise terrain at cursor
+
+    // Base terrain position with slow drift
+    vec2 tp = (p + mouseWarp) * 0.7 + vec2(t * 0.5, t * 0.35);
+
+    // Domain warp — slow swirling
+    vec2 warp = vec2(
+        snoise(tp * 0.8 + vec2(3.1, 7.2) + t * 0.2) * 0.3,
+        snoise(tp * 0.8 + vec2(9.4, 1.6) + t * 0.15) * 0.3
     );
-    warp += (mouse - p) * mouseInfluence * 0.4;
+    float terrain = fbm(tp + warp) + mouseElevation;
 
-    // Multi-scale terrain
-    float terrain = fbm(warp * 2.0 + offset);
-    terrain += fbm(warp * 4.0 - offset * 0.5) * 0.3;
+    // Contour lines — 10 levels for clean spacing
+    float levels = 10.0;
+    float h = terrain * levels;
+    float dh = fwidth(h);
 
-    // Add ripple near cursor
-    float ripple = sin(mouseDist * 25.0 - u_time * 2.0) * exp(-mouseDist * 3.0) * 0.15;
-    terrain += ripple;
+    // Minor lines: thin, clean
+    float minorD = abs(fract(h + 0.5) - 0.5);
+    float minorLine = 1.0 - smoothstep(0.0, max(dh * 1.5, 0.02), minorD);
 
-    // Isolines - fewer, sparser
-    float levels = 12.0;
-    float terrainScaled = terrain * levels;
-    float isoline = abs(fract(terrainScaled) - 0.5);
-    float line = 1.0 - smoothstep(0.0, 0.06, isoline);
+    // Major lines: every 3rd level, slightly thicker
+    float majorH = h / 3.0;
+    float majorD = abs(fract(majorH + 0.5) - 0.5);
+    float majorDh = fwidth(majorH);
+    float majorLine = 1.0 - smoothstep(0.0, max(majorDh * 2.0, 0.015), majorD);
 
-    // Major lines every 4 levels
-    float majorLine = abs(fract(terrainScaled / 4.0) - 0.5);
-    float major = 1.0 - smoothstep(0.0, 0.04, majorLine);
+    // Single red accent contour at specific elevation
+    float redDist = abs(h - 3.0);
+    float redLine = 1.0 - smoothstep(0.0, max(dh * 2.5, 0.025), redDist);
 
-    // Single red isoline at specific elevation
-    float redLevel = 7.0;
-    float redDist = abs(terrainScaled - redLevel);
-    float redLine = 1.0 - smoothstep(0.0, 0.12, redDist);
+    // Clean beige/cream background
+    vec3 paper = vec3(0.949, 0.929, 0.894);
 
-    // Colors
-    vec3 lineColor = vec3(0.72, 0.38, 0.08);       // dark orange
-    vec3 majorColor = vec3(0.55, 0.25, 0.02);      // deeper orange
-    vec3 glowColor = vec3(0.85, 0.50, 0.12);       // warm glow
-    vec3 redColor = vec3(0.82, 0.12, 0.10);        // red accent
+    // Very subtle elevation shading
+    float elev = smoothstep(-1.0, 1.0, terrain);
+    paper += (elev - 0.5) * 0.015;
 
-    // Elevation tint
-    float elev = terrain * 0.5 + 0.5;
-    vec3 elevTint = mix(
-        vec3(0.94, 0.92, 0.88),
-        vec3(0.97, 0.94, 0.90),
-        elev
-    );
+    // Line colors
+    vec3 thinColor = vec3(0.78, 0.74, 0.68);
+    vec3 thickColor = vec3(0.60, 0.55, 0.48);
+    vec3 redColor = vec3(0.78, 0.28, 0.15);
 
-    // Compose
-    vec3 color = elevTint;
-    color = mix(color, lineColor, line * 0.3);
-    color = mix(color, majorColor, major * 0.5);
-    color = mix(color, redColor, redLine * 0.7);
+    // Compose — clean layering
+    vec3 color = paper;
+    color = mix(color, thinColor, minorLine * 0.28);
+    color = mix(color, thickColor, majorLine * 0.50);
+    color = mix(color, redColor, redLine * 0.80);
 
-    // Cursor glow
-    float glow = exp(-mouseDist * 3.0) * 0.2;
-    color = mix(color, glowColor, glow);
+    // Warm glow at cursor
+    color += vec3(0.08, 0.04, 0.0) * mouseRadius * 0.6;
 
-    // Subtle vignette
-    float vig = 1.0 - length((uv - 0.5) * 1.3);
-    vig = smoothstep(0.0, 0.7, vig);
-    color *= mix(0.85, 1.0, vig);
+    // Gentle vignette
+    float vig = 1.0 - dot((uv - 0.5) * 0.9, (uv - 0.5) * 0.9);
+    color *= smoothstep(0.0, 0.5, vig) * 0.08 + 0.92;
 
     gl_FragColor = vec4(color, 1.0);
 }`;
 
-// Compile shader
-function createShader(type, src) {
-    const s = gl.createShader(type);
-    gl.shaderSource(s, src);
-    gl.compileShader(s);
-    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
-        console.error(gl.getShaderInfoLog(s));
-        return null;
-    }
-    return s;
-}
+const uniforms = {
+    u_resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+    u_time: { value: 0 },
+    u_mouse: { value: new THREE.Vector2(0.5, 0.5) }
+};
 
-const vs = createShader(gl.VERTEX_SHADER, vertSrc);
-const fs = createShader(gl.FRAGMENT_SHADER, fragSrc);
-const prog = gl.createProgram();
-gl.attachShader(prog, vs);
-gl.attachShader(prog, fs);
-gl.linkProgram(prog);
-gl.useProgram(prog);
+const material = new THREE.ShaderMaterial({
+    vertexShader,
+    fragmentShader,
+    uniforms
+});
 
-// Fullscreen quad
-const buf = gl.createBuffer();
-gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
-const aPos = gl.getAttribLocation(prog, 'a_pos');
-gl.enableVertexAttribArray(aPos);
-gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+const mesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material);
+scene.add(mesh);
 
-// Uniforms
-const uRes = gl.getUniformLocation(prog, 'u_resolution');
-const uTime = gl.getUniformLocation(prog, 'u_time');
-const uMouse = gl.getUniformLocation(prog, 'u_mouse');
-
-let mx = 0.5, my = 0.5;
-let smx = 0.5, smy = 0.5;
+// ── Mouse tracking ──
+let mouseTarget = { x: 0.5, y: 0.5 };
+let mouseCurrent = { x: 0.5, y: 0.5 };
 
 document.addEventListener('mousemove', e => {
-    mx = e.clientX / window.innerWidth;
-    my = 1.0 - e.clientY / window.innerHeight;
+    mouseTarget.x = e.clientX / window.innerWidth;
+    mouseTarget.y = 1.0 - e.clientY / window.innerHeight;
 });
 
 document.addEventListener('touchmove', e => {
     const t = e.touches[0];
-    mx = t.clientX / window.innerWidth;
-    my = 1.0 - t.clientY / window.innerHeight;
+    mouseTarget.x = t.clientX / window.innerWidth;
+    mouseTarget.y = 1.0 - t.clientY / window.innerHeight;
 }, { passive: true });
 
-function resize() {
-    const dpr = Math.min(window.devicePixelRatio, 2);
-    canvas.width = window.innerWidth * dpr;
-    canvas.height = window.innerHeight * dpr;
-    gl.viewport(0, 0, canvas.width, canvas.height);
-}
-window.addEventListener('resize', resize);
-resize();
+// ── Resize ──
+window.addEventListener('resize', () => {
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    uniforms.u_resolution.value.set(window.innerWidth, window.innerHeight);
+});
 
-function render(t) {
-    // Smooth mouse
-    smx += (mx - smx) * 0.05;
-    smy += (my - smy) * 0.05;
+// ── Render loop ──
+const clock = new THREE.Clock();
 
-    gl.uniform2f(uRes, canvas.width, canvas.height);
-    gl.uniform1f(uTime, t * 0.001);
-    gl.uniform2f(uMouse, smx, smy);
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+function render() {
+    const elapsed = clock.getElapsedTime();
+
+    // Very smooth mouse easing
+    mouseCurrent.x += (mouseTarget.x - mouseCurrent.x) * 0.025;
+    mouseCurrent.y += (mouseTarget.y - mouseCurrent.y) * 0.025;
+
+    uniforms.u_time.value = elapsed;
+    uniforms.u_mouse.value.set(mouseCurrent.x, mouseCurrent.y);
+
+    renderer.render(scene, camera);
     requestAnimationFrame(render);
 }
-requestAnimationFrame(render);
-</script>
+render();
+
+// ── GSAP entrance animations ──
+const tl = gsap.timeline({ defaults: { ease: 'power3.out' }});
+
+tl.to('.hero-name .line-inner', {
+    y: '0%',
+    duration: 1.4,
+    delay: 0.3
+})
+.to('.hero-surname .line-inner', {
+    y: '0%',
+    duration: 1.4,
+}, '-=1.0')
+.to('.hero-label', {
+    opacity: 1,
+    duration: 0.8,
+}, '-=0.8')
+.to('.logo', {
+    opacity: 1,
+    duration: 0.8,
+}, '-=0.6')
+.to('nav a', {
+    opacity: 0.7,
+    duration: 0.6,
+    stagger: 0.1
+}, '-=0.5')
+.to('.time', {
+    opacity: 1,
+    duration: 0.6,
+}, '-=0.4')
+.to('.tagline', {
+    opacity: 1,
+    duration: 0.8,
+}, '-=0.4')
+.to('.status', {
+    opacity: 1,
+    duration: 0.6,
+}, '-=0.6')
+.to('.coords', {
+    opacity: 1,
+    duration: 0.6,
+}, '-=0.4')
+.to('.scroll-hint', {
+    opacity: 0.6,
+    duration: 0.6,
+}, '-=0.3')
+.to('#cursorDot', {
+    opacity: 0.8,
+    duration: 0.5,
+}, '-=0.3');
+
+    </script>
 </body>
 </html>
