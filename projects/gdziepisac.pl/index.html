@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>gdziepisac.pl — Dorobek naukowy widoczny, zanim powstanie DOI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cobalt:#2438F0;
+  --beige:#F4F1E9;
+  --softwhite:#FBFAF6;
+  --ink:#15151C;
+  --display:'Bricolage Grotesque',system-ui,sans-serif;
+  --body:'Hanken Grotesk',system-ui,sans-serif;
+  --mono:'Space Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--beige);font-family:var(--body);overflow:hidden;-webkit-font-smoothing:antialiased;transition:background .45s ease}
+
+/* ---------- themes ---------- */
+.slide.t-paper{--bg:#F4F1E9;--fg:#15151C;--fg-dim:#5c5c64;--rule:rgba(20,20,28,.15);--panel:#fff;--accent:#2438F0;--mark-bg:#2438F0;--mark-fg:#fff}
+.slide.t-white{--bg:#FBFAF6;--fg:#15151C;--fg-dim:#5c5c64;--rule:rgba(20,20,28,.12);--panel:#F4F1E9;--accent:#2438F0;--mark-bg:#2438F0;--mark-fg:#fff}
+.slide.t-cobalt{--bg:#2438F0;--fg:#fff;--fg-dim:rgba(255,255,255,.82);--rule:rgba(255,255,255,.3);--panel:rgba(255,255,255,.1);--accent:#FBF6EB;--mark-bg:#FBF6EB;--mark-fg:#2438F0}
+
+/* ---------- shell ---------- */
+.deck{position:fixed;inset:0}
+.slide{position:absolute;inset:0;background:var(--bg);color:var(--fg);display:flex;align-items:center;padding:8vh 7vw 14vh;opacity:0;visibility:hidden;transform:scale(.985);transition:opacity .45s ease,transform .45s ease,visibility 0s linear .45s}
+.slide.active{opacity:1;visibility:visible;transform:none;transition:opacity .45s ease,transform .45s ease,visibility 0s}
+.wrap{width:min(1080px,100%);max-height:100%;position:relative;z-index:2}
+
+.slide .r{opacity:0}
+.slide.active .r{animation:rise .55s cubic-bezier(.2,.75,.25,1) both}
+.slide.active .r1{animation-delay:.04s}.slide.active .r2{animation-delay:.13s}
+.slide.active .r3{animation-delay:.22s}.slide.active .r4{animation-delay:.31s}
+.slide.active .r5{animation-delay:.4s}.slide.active .r6{animation-delay:.49s}
+@keyframes rise{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.slide,.slide.active .r{transition:none;animation:none!important;opacity:1!important;transform:none!important}}
+
+/* ghost numeral signature */
+.ghostnum{position:absolute;top:5.5vh;right:6vw;font-family:var(--display);font-weight:800;font-size:clamp(7rem,17vw,15rem);line-height:.8;color:var(--accent);opacity:.1;z-index:1;user-select:none;letter-spacing:-.04em}
+.t-cobalt .ghostnum{opacity:.16}
+
+/* ---------- type ---------- */
+.eyebrow{font-family:var(--mono);font-size:.72rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:1.5rem;display:inline-flex;align-items:center;gap:.7rem}
+.eyebrow::before{content:"";width:30px;height:3px;background:var(--accent);display:inline-block}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(2.2rem,5.4vw,4.4rem);line-height:.98;letter-spacing:-.025em;max-width:18ch}
+.mark{background:var(--mark-bg);color:var(--mark-fg);padding:.02em .22em;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.em{color:var(--accent)}
+.lead{font-size:clamp(1rem,1.55vw,1.28rem);line-height:1.5;color:var(--fg-dim);max-width:50ch;margin-top:1.6rem;font-weight:500}
+.kicker{font-family:var(--display);font-weight:700;font-size:clamp(1.2rem,2.2vw,1.7rem);line-height:1.15;margin-top:2.4rem;letter-spacing:-.02em}
+.kicker .em{color:var(--accent)}
+.meta{font-family:var(--mono);font-size:.72rem;color:var(--fg-dim);letter-spacing:.06em}
+
+/* badge */
+.badge{display:inline-block;font-family:var(--mono);font-weight:700;font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;background:var(--accent);color:var(--mark-fg);padding:.7rem 1.2rem;margin-top:2.8rem}
+
+/* stats */
+.statrow{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:2.8rem;border-top:3px solid var(--fg)}
+.stat{padding:1.7rem 1.6rem 1.5rem;border-right:1px solid var(--rule)}
+.stat:last-child{border-right:none}
+.stat b{display:block;font-family:var(--display);font-weight:800;font-size:clamp(2.2rem,4.4vw,3.4rem);line-height:.95;letter-spacing:-.03em}
+.stat b sup{font-size:.4em;color:var(--accent);vertical-align:super;font-weight:700}
+.stat span{display:block;margin-top:.8rem;font-size:.86rem;line-height:1.42;color:var(--fg-dim);font-weight:500}
+
+/* cards */
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:1.1rem;margin-top:2.6rem}
+.card{background:var(--panel);border-top:5px solid var(--accent);padding:1.7rem 1.5rem 1.6rem}
+.card .tag{font-family:var(--mono);font-weight:700;font-size:.64rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:1rem}
+.card h3{font-family:var(--display);font-weight:700;font-size:1.35rem;letter-spacing:-.02em;margin-bottom:.65rem;line-height:1.05}
+.card p{font-size:.9rem;line-height:1.5;color:var(--fg-dim);font-weight:500}
+
+/* list */
+.list{margin-top:2.2rem;border-top:3px solid var(--fg)}
+.list .row{display:grid;grid-template-columns:200px 1fr;gap:1.6rem;padding:1.25rem 0;border-bottom:1px solid var(--rule);align-items:baseline}
+.list .row b{font-family:var(--mono);font-weight:700;font-size:.76rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+.list .row p{font-size:1rem;line-height:1.5;font-weight:600}
+.list .row p span{color:var(--fg-dim);font-weight:500}
+
+/* pipeline */
+.pipe{margin-top:3.4rem;position:relative}
+.pipe .track{display:flex;justify-content:space-between;position:relative;padding-top:.5rem}
+.pipe .track::before{content:"";position:absolute;left:0;right:0;top:1.05rem;height:3px;background:var(--fg);opacity:.35}
+.pipe .node{position:relative;text-align:center;flex:1}
+.pipe .node i{display:block;width:15px;height:15px;border-radius:50%;background:var(--bg);border:3px solid var(--fg);margin:0 auto;position:relative;z-index:2}
+.pipe .node em{display:block;font-style:normal;font-family:var(--mono);font-weight:700;font-size:.64rem;letter-spacing:.06em;margin-top:.9rem;color:var(--fg-dim);text-transform:uppercase}
+.pipe .node.lit i{background:var(--accent);border-color:var(--accent)}
+.pipe .node.lit em{color:var(--accent)}
+.pipe .bracket{position:absolute;top:-2.4rem;left:0;width:70%;border:3px solid var(--accent);border-bottom:none;height:1.3rem;border-radius:8px 8px 0 0}
+.pipe .bracket span{position:absolute;top:-1rem;left:50%;transform:translateX(-50%);background:var(--bg);padding:0 1rem;font-family:var(--mono);font-weight:700;font-size:.7rem;letter-spacing:.1em;color:var(--accent);text-transform:uppercase;white-space:nowrap}
+
+/* product mocks */
+.mockrow{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:1rem;margin-top:2.4rem}
+.mock{background:var(--panel);border:1px solid var(--rule);border-top:5px solid var(--accent);padding:1.1rem}
+.mock .mtitle{font-family:var(--mono);font-weight:700;font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:.9rem;display:flex;justify-content:space-between}
+.mock .mtitle i{font-style:normal;color:var(--fg-dim);font-weight:400}
+.kan{display:grid;grid-template-columns:repeat(3,1fr);gap:.45rem}
+.kan .col{background:rgba(20,20,28,.04);padding:.5rem;border-radius:4px}
+.kan h5{font-family:var(--mono);font-weight:700;font-size:.54rem;letter-spacing:.06em;color:var(--fg-dim);text-transform:uppercase;margin-bottom:.5rem}
+.kan .kcard{background:#fff;border:1px solid var(--rule);border-radius:3px;padding:.45rem;margin-bottom:.4rem;line-height:1.3}
+.kan .kcard b{display:block;font-size:.66rem;font-weight:700}
+.kan .kcard span{font-size:.58rem;color:var(--fg-dim)}
+.kan .kcard.hot{border-left:3px solid var(--accent)}
+.doibox{font-family:var(--mono);font-size:.66rem;border:2px dashed var(--accent);border-radius:4px;padding:.6rem;background:rgba(36,56,240,.04)}
+.doiarrow{text-align:center;color:var(--accent);font-size:1.2rem;padding:.3rem 0;font-weight:700}
+.doiout{border:1px solid var(--rule);border-radius:4px;padding:.65rem;line-height:1.45;background:#fff}
+.doiout b{font-size:.72rem;display:block}
+.doiout span{font-size:.6rem;color:var(--fg-dim);display:block}
+.doiout .ok{color:var(--accent);font-family:var(--mono);font-weight:700;font-size:.58rem;letter-spacing:.06em;text-transform:uppercase;margin-top:.4rem;display:block}
+.dash table{width:100%;border-collapse:collapse;font-size:.62rem}
+.dash th{font-family:var(--mono);font-weight:700;font-size:.52rem;letter-spacing:.06em;text-transform:uppercase;color:var(--fg-dim);text-align:left;padding:.3rem;border-bottom:2px solid var(--rule)}
+.dash td{padding:.36rem .3rem;border-bottom:1px solid var(--rule);line-height:1.25}
+.dash td.pts{font-family:var(--mono);color:var(--accent);font-weight:700}
+.dash .pill{display:inline-block;font-family:var(--mono);font-size:.5rem;letter-spacing:.04em;border:1px solid var(--rule);border-radius:99px;padding:.05rem .4rem;color:var(--fg-dim);text-transform:uppercase}
+.dash .pill.acc{border-color:var(--accent);color:var(--accent)}
+.dash .exp{font-family:var(--mono);font-weight:700;font-size:.54rem;color:var(--accent);letter-spacing:.06em;padding-top:.5rem}
+
+/* tiers */
+.tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-top:2.4rem;align-items:stretch}
+.tier{background:var(--panel);border:1px solid var(--rule);padding:1.7rem 1.5rem;display:flex;flex-direction:column}
+.tier.hot{border:none;background:var(--accent);color:var(--mark-fg)}
+.tier .who{font-family:var(--mono);font-weight:700;font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;opacity:.85}
+.tier .price{font-family:var(--display);font-weight:800;font-size:2rem;letter-spacing:-.03em;margin:.6rem 0 .1rem;line-height:1}
+.tier .price small{font-family:var(--body);font-size:.78rem;font-weight:600;opacity:.7;letter-spacing:0}
+.tier ul{list-style:none;margin-top:1.1rem;flex:1}
+.tier li{font-size:.88rem;font-weight:600;padding:.4rem 0 .4rem 1.3rem;position:relative;line-height:1.4}
+.tier li::before{content:"›";position:absolute;left:0;font-weight:700;font-family:var(--mono)}
+.tier.hot li::before{color:var(--mark-fg)}
+.tier:not(.hot) li::before{color:var(--accent)}
+.tier .note{margin-top:1.1rem;font-family:var(--mono);font-weight:700;font-size:.62rem;letter-spacing:.06em;text-transform:uppercase}
+.tier:not(.hot) .note{color:var(--accent)}
+
+/* competition */
+table.comp{width:100%;border-collapse:collapse;margin-top:2.4rem}
+table.comp th{font-family:var(--mono);font-weight:700;font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--fg-dim);text-align:left;padding:.8rem .9rem;border-bottom:3px solid var(--fg)}
+table.comp td{padding:1.05rem .9rem;border-bottom:1px solid var(--rule);font-size:.94rem;line-height:1.45;vertical-align:top;font-weight:500}
+table.comp td:first-child{font-family:var(--display);font-weight:700;font-size:1rem;white-space:nowrap}
+table.comp td:nth-child(2){color:var(--fg-dim)}
+table.comp td:last-child::before{content:"→ ";color:var(--accent);font-weight:700}
+
+/* ask split */
+.split{display:grid;grid-template-columns:1fr 1fr;gap:1.4rem;margin-top:2.6rem}
+.split .box{padding:1.8rem 1.7rem;display:flex;flex-direction:column}
+.split .box.fill{background:var(--accent);color:var(--mark-fg)}
+.split .box.ghost{border:3px solid var(--fg)}
+.split .box h3{font-family:var(--display);font-weight:700;font-size:1.5rem;letter-spacing:-.02em;margin-bottom:.8rem;line-height:1.05}
+.split .box p{font-size:.95rem;line-height:1.55;font-weight:500;flex:1}
+.split .box.ghost p{color:var(--fg-dim)}
+.split .box .cta{display:inline-block;margin-top:1.3rem;align-self:flex-start;font-family:var(--mono);font-weight:700;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;padding:.85rem 1.3rem}
+.split .box.fill .cta{background:var(--mark-fg);color:var(--accent)}
+.split .box.ghost .cta{background:var(--fg);color:var(--bg)}
+
+/* ---------- chrome ---------- */
+.ui{position:fixed;left:0;right:0;bottom:0;padding:1.2rem 2.4rem 1.4rem;display:flex;align-items:center;gap:1.8rem;z-index:50;pointer-events:none}
+.ui *{pointer-events:auto}
+.counter{font-family:var(--mono);font-weight:700;font-size:.72rem;letter-spacing:.1em;min-width:170px;color:var(--uifg)}
+.counter b{color:var(--uiacc)}
+.rail{flex:1;position:relative;height:24px;display:flex;align-items:center}
+.rail .base{position:absolute;left:0;right:0;height:3px;background:var(--uirule)}
+.rail .fill{position:absolute;left:0;height:3px;background:var(--uiacc);transition:width .4s ease}
+.rail .ticks{position:absolute;inset:0;display:flex;justify-content:space-between;align-items:center}
+.rail .tick{width:11px;height:11px;border-radius:50%;border:2px solid var(--uirule);background:var(--uibg);cursor:pointer;transition:.25s;appearance:none;padding:0}
+.rail .tick.done{background:var(--uiacc);border-color:var(--uiacc)}
+.rail .tick.now{border-color:var(--uiacc);background:var(--uibg);transform:scale(1.4)}
+.rail .tick:focus-visible{outline:2px solid var(--uiacc);outline-offset:3px}
+.navbtns{display:flex;gap:.5rem}
+.navbtns button{font-family:var(--mono);font-weight:700;width:42px;height:42px;border:2px solid var(--uirule);background:transparent;color:var(--uifg);font-size:1rem;cursor:pointer;transition:.2s}
+.navbtns button:hover{background:var(--uiacc);border-color:var(--uiacc);color:var(--uibg)}
+.navbtns button:focus-visible{outline:2px solid var(--uiacc);outline-offset:2px}
+
+body[data-ui="light"]{--uifg:#15151C;--uidim:#5c5c64;--uirule:rgba(20,20,28,.22);--uiacc:var(--cobalt);--uibg:#F4F1E9}
+body[data-ui="dark"]{--uifg:#fff;--uidim:rgba(255,255,255,.6);--uirule:rgba(255,255,255,.32);--uiacc:#FBF6EB;--uibg:#2438F0}
+
+.hint{position:fixed;bottom:5rem;right:2.6rem;font-family:var(--mono);font-weight:700;font-size:.66rem;letter-spacing:.1em;color:var(--uifg);text-transform:uppercase;animation:pulse 2.2s infinite;z-index:40}
+@keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+
+/* responsive */
+@media (max-width:860px){
+  .slide{padding:5vh 7vw 16vh}
+  .wrap{overflow-y:auto;max-height:76vh}
+  .statrow,.cards,.tiers,.mockrow,.split{grid-template-columns:1fr;gap:.8rem}
+  .statrow{border-top:none}
+  .stat{border-right:none;border-top:3px solid var(--fg)}
+  .list .row{grid-template-columns:1fr;gap:.3rem}
+  .pipe .node em{font-size:.5rem}
+  .pipe .bracket span{font-size:.58rem}
+  table.comp td:nth-child(2),table.comp th:nth-child(2){display:none}
+  .mock.hidemob{display:none}
+  .counter{display:none}
+  .ghostnum{font-size:7rem}
+  h1{font-size:2rem}
+}
+@media print{
+  body{overflow:visible}
+  .deck{position:static}
+  .slide{position:static;opacity:1!important;visibility:visible!important;transform:none!important;page-break-after:always;min-height:96vh}
+  .slide .r{opacity:1!important;animation:none!important}
+  .ui,.hint{display:none}
+}
+</style>
+</head>
+<body data-ui="dark">
+
+<div class="deck" id="deck">
+
+<!-- 01 COVER -->
+<section class="slide t-cobalt" data-stage="POMYSŁ">
+  <span class="ghostnum">01</span>
+  <div class="wrap">
+    <div class="eyebrow r r1">gdziepisac.pl · platforma</div>
+    <h1 class="r r2">Dorobek naukowy widoczny, <span class="mark">zanim powstanie DOI</span>.</h1>
+    <p class="lead r r3">Platforma, na której polscy naukowcy planują, śledzą i publikują swoje artykuły — a ich uczelnie wreszcie widzą to, co dopiero powstaje, a nie tylko to, co już się ukazało.</p>
+    <div class="r r4"><span class="badge">Wykaz MNiSW · 34 088 czasopism · zindeksowane</span></div>
+  </div>
+</section>
+
+<!-- 02 PROBLEM: INSTITUTION -->
+<section class="slide t-paper" data-stage="PISANIE">
+  <span class="ghostnum">02</span>
+  <div class="wrap">
+    <div class="eyebrow r r1">Problem · dla uczelni</div>
+    <h1 class="r r2">O publikacjach swoich naukowców dowiadujecie się <span class="em">miesiące po świecie</span>.</h1>
+    <p class="lead r r3">PBN, repozytoria, coroczne ankiety — każdy system, który macie, rejestruje przeszłość. Między pierwszym szkicem a numerem DOI mija 6–18 miesięcy, w których uczelnia nie widzi nic.</p>
+    <div class="statrow r r4">
+      <div class="stat"><b>6–18<sup>mies.</sup></b><span>ciemności na ścieżce publikacji — od złożenia do zindeksowania artykułu</span></div>
+      <div class="stat"><b>100%</b><span>ręcznego zbierania danych: maile, formularze, arkusze, ponaglenia</span></div>
+      <div class="stat"><b>0</b><span>wglądu w przyszłość — co wasza kadra opublikuje w nadchodzącym roku</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 03 STAKES -->
+<section class="slide t-white" data-stage="PISANIE">
+  <span class="ghostnum">03</span>
+  <div class="wrap">
+    <div class="eyebrow r r1">Stawka tej luki</div>
+    <h1 class="r r2">To nie niedogodność.<br>To <span class="mark">pieniądze i akredytacja</span>.</h1>
+    <div class="list r r3">
+      <div class="row"><b>Ewaluacja</b><p>Kategoria naukowa decyduje o subwencji. Spadek poniżej B+ <span>odbiera dyscyplinie prawo do nadawania stopni naukowych.</span></p></div>
+      <div class="row"><b>PKA</b><p>Akredytacja programowa wymaga kompletnych, aktualnych dowodów dorobku — <span>dziś składanych ręcznie, pod presją terminu.</span></p></div>
+      <div class="row"><b>Koszt administracyjny</b><p>Tygodnie pracy zespołów na zbieranie danych <span>od naukowców — danych, które już istnieją w ich skrzynkach i prywatnych arkuszach.</span></p></div>
+      <div class="row"><b>Strategia</b><p>Dziekani sterują dyscyplinami patrząc we wsteczne lusterko: <span>gdy luki w dorobku pojawiają się w PBN, okno ewaluacji już się zamyka.</span></p></div>
+    </div>
+    <p class="kicker r r4">Te dane istnieją. Po prostu są <span class="em">tam, gdzie ich nie widzicie</span>.</p>
+  </div>
+</section>
+
+<!-- 04 PROBLEM: RESEARCHER -->
+<section class="slide t-paper" data-stage="PISANIE">
+  <span class="ghostnum">04</span>
+  <div class="wrap">
+    <div class="eyebrow r r1">Problem · dla naukowca</div>
+    <h1 class="r r2">Waszym źródłem danych jest człowiek, który ma <span class="em">ważniejsze rzeczy do roboty</span>.</h1>
+    <p class="lead r r3">Typowy naukowiec ma 3–8 artykułów w toku. Jego narzędzia: ministerialny arkusz z 34 088 wierszami, prywatny Excel, archeologia skrzynki mailowej — i wasz formularz, wypełniany późno i z oporem.</p>
+    <div class="cards r r4">
+      <div class="card"><span class="tag">Wybór czasopisma</span><h3>Arkusz MNiSW i zgadywanie</h3><p>Zmienne punktacje, 34 088 wierszy, brak filtrów odpowiadających temu, jak naukowcy naprawdę wybierają.</p></div>
+      <div class="card"><span class="tag">Śledzenie artykułów</span><h3>Pamięć i skrzynka</h3><p>Zgłoszenia, recenzje, decyzje — rozrzucone po wątkach mailowych z pięcioma różnymi redakcjami.</p></div>
+      <div class="card"><span class="tag">Raportowanie do was</span><h3>Znienawidzony formularz</h3><p>Przepisywanie metadanych, które już są w CrossRef. Co cykl. Dla każdej afiliacji.</p></div>
+    </div>
+    <p class="kicker r r5">Złe dane uczelni to nie problem dyscypliny. To problem <span class="em">narzędzi</span>.</p>
+  </div>
+</section>
+
+<!-- 05 INSIGHT -->
+<section class="slide t-white" data-stage="ZŁOŻONY">
+  <span class="ghostnum">05</span>
+  <div class="wrap">
+    <div class="eyebrow r r1">Kluczowa obserwacja</div>
+    <h1 class="r r2">Wszystko przed DOI jest <span class="mark">niewidzialne</span>.</h1>
+    <div class="pipe r r3">
+      <div class="bracket"><span>niewidoczne dla każdego istniejącego systemu</span></div>
+      <div class="track">
+        <div class="node"><i></i><em>Pomysł</em></div>
+        <div class="node"><i></i><em>Pisanie</em></div>
+        <div class="node"><i></i><em>Złożony</em></div>
+        <div class="node"><i></i><em>Recenzja</em></div>
+        <div class="node"><i></i><em>Przyjęty</em></div>
+        <div class="node lit"><i></i><em>Opublikowany</em></div>
+      </div>
+    </div>
+    <p class="kicker r r4" style="margin-top:3.6rem">Kto kontroluje ścieżkę publikacji, ma <span class="em">najświeższe dane naukowe w kraju</span>. Zbudowaliśmy narzędzie, które naukowiec otwiera w dniu, w którym ma pomysł.</p>
+  </div>
+</section>
+
+<!-- 06 SOLUTION -->
+<section class="slide t-paper" data-stage="ZŁOŻONY">
+  <span class="ghostnum">06</span>
+  <div class="wrap">
+    <div class="eyebrow r r1">Rozwiązanie</div>
+    <h1 class="r r2">Jedna platforma.<br><span class="mark">Obie strony biurka</span>.</h1>
+    <div class="cards r r3">
+      <div class="card"><span class="tag">Dla naukowca · za darmo</span><h3>Planuj i śledź</h3><p>Przeszukaj wszystkie 34 088 czasopism z wykazu MNiSW po punktach, dyscyplinie, SJR. Twórz listę celów. Prowadź każdy artykuł na osobistej tablicy.</p></div>
+      <div class="card"><span class="tag">Most</span><h3>Wklej DOI. Gotowe.</h3><p>Jeden DOI pobiera pełne metadane z CrossRef w kilka sekund — tytuł, autorów, czasopismo, punkty. Zero przepisywania. Udostępnienie uczelni to jedno kliknięcie, kontrolowane przez autora.</p></div>
+      <div class="card"><span class="tag">Dla uczelni</span><h3>Widz i raportuj</h3><p>Żywy panel dorobku afiliowanych autorów — również tego złożonego i przyjętego, a jeszcze nieopublikowanego. Eksport gotowy pod ewaluację i PKA.</p></div>
+    </div>
+    <p class="kicker r r4">Naukowcy dostają narzędzie, którego <span class="em">chcą</span>. Wy dostajecie dane, których <span class="em">do tej pory szukaliście</span>.</p>
+  </div>
+</section>
+
+<!-- 07 PRODUCT -->
+<section class="slide t-white" data-stage="ZŁOŻONY">
+  <span class="ghostnum">07</span>
+  <div class="wrap">
+    <div class="eyebrow r r1">Jak to działa</div>
+    <h1 class="r r2">Trzy minuty od pomysłu do <span class="mark">widoczności dla uczelni</span>.</h1>
+    <div class="mockrow r r3">
+      <div class="mock">
+        <div class="mtitle">01 · Tablica naukowca <i>kanban</i></div>
+        <div class="kan">
+          <div class="col"><h5>Pisanie</h5>
+            <div class="kcard"><b>Heurystyki audytu AI Act</b><span>cel: AI &amp; Society · 140 pkt</span></div>
+          </div>
+          <div class="col"><h5>Recenzja</h5>
+            <div class="kcard hot"><b>RODO w badaniach klin.</b><span>Computer Law Rev. · 100 pkt</span></div>
+            <div class="kcard"><b>Wzorce UX lejków</b><span>Interact. Comput. · 100 pkt</span></div>
+          </div>
+          <div class="col"><h5>Przyjęty</h5>
+            <div class="kcard"><b>Dryf cytowań LLM</b><span>dodaj DOI po publikacji →</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="mock">
+        <div class="mtitle">02 · Import DOI <i>crossref</i></div>
+        <div class="doibox">10.1016/j.respol.2026.10499</div>
+        <div class="doiarrow">↓</div>
+        <div class="doiout">
+          <b>Dryf cytowań LLM w metadanych</b>
+          <span>Kowalski A., Nowak M. · Research Policy</span>
+          <span>Elsevier · 2026 · ISSN 0048-7333 · 200 pkt</span>
+          <span class="ok">✓ import w 3 s · 0 wpisanych pól</span>
+        </div>
+      </div>
+      <div class="mock dash hidemob">
+        <div class="mtitle">03 · Widok uczelni <i>na żywo</i></div>
+        <table>
+          <tr><th>Autor</th><th>Artykuł</th><th>Pkt</th><th>Status</th></tr>
+          <tr><td>Kowalski A.</td><td>Dryf cytowań LLM…</td><td class="pts">200</td><td><span class="pill acc">przyjęty</span></td></tr>
+          <tr><td>Nowak M.</td><td>RODO w badaniach…</td><td class="pts">100</td><td><span class="pill">recenzja</span></td></tr>
+          <tr><td>Wiśniewska K.</td><td>Heurystyki audytu…</td><td class="pts">140</td><td><span class="pill">pisanie</span></td></tr>
+          <tr><td colspan="4" class="exp">⤓ EKSPORT CSV · FORMAT EWALUACJI</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 08 ADOPTION -->
+<section class="slide t-paper" data-stage="RECENZJA">
+  <span class="ghostnum">08</span>
+  <div class="wrap">
+    <div class="eyebrow r r1">Dlaczego to działa tam, gdzie portale zawiodły</div>
+    <h1 class="r r2">Naukowcy nie wypełniają tu formularzy. <span class="em">Przyszli sami</span>.</h1>
+    <div class="list r r3">
+      <div class="row"><b>Już tu są</b><p>Naukowcy trafiają na gdziepisac.pl organicznie, wybierając gdzie publikować. <span>Przejmujemy wyszukiwanie, które i tak wykonują — bez nakazu, szkoleń i wdrożenia.</span></p></div>
+      <div class="row"><b>Realnie przydatne</b><p>Tablica, lista czasopism i autouzupełnianie DOI służą najpierw naukowcowi. <span>Raportowanie do was staje się produktem ubocznym narzędzia, którego i tak używają.</span></p></div>
+      <div class="row"><b>Zaufanie w architekturze</b><p>Udostępnianie jest per artykuł, kontrolowane przez autora, odwoływalne. Architektura zgodna z RODO od certyfikowanego IOD/audytora. <span>Naukowcy udostępniają, bo mają kontrolę — dlatego dane płyną.</span></p></div>
+      <div class="row"><b>Nic do migracji</b><p>Żadnego projektu integracji ani przetargu IT, by zacząć. <span>To naukowcy przynoszą dane. Wy przejmujecie gotowy panel.</span></p></div>
+    </div>
+    <p class="kicker r r4">Wasz problem ze zbieraniem danych <span class="em">rozwiązuje się sam</span>.</p>
+  </div>
+</section>
+
+<!-- 09 TRACTION -->
+<section class="slide t-white" data-stage="RECENZJA">
+  <span class="ghostnum">09</span>
+  <div class="wrap">
+    <div class="eyebrow r r1">Trakcja i przewaga</div>
+    <h1 class="r r2">Nie zaczynamy od zera. Zaczynamy od <span class="mark">wyszukiwarki</span>.</h1>
+    <div class="statrow r r3">
+      <div class="stat"><b>Live</b><span>gdziepisac.pl działa dziś produkcyjnie, z organicznym ruchem naukowców przy zerowym koszcie pozyskania</span></div>
+      <div class="stat"><b>34 088</b><span>czasopism z wykazu MNiSW zindeksowanych i utrzymywanych — punkty, ISSN, dyscypliny, SJR</span></div>
+      <div class="stat"><b>SEO</b><span>pozycje na dokładnie tych zapytaniach, które naukowcy wpisują w momencie wyboru czasopisma</span></div>
+    </div>
+    <div class="list r r4">
+      <div class="row"><b>Dopasowanie zespołu</b><p>Tworzy fullstack inżynier z 20+ latami wdrażania produktów — i certyfikowany IOD/audytor. <span>W sektorze, gdzie zastrzeżenia o ochronie danych zabijają wdrożenia, zgodność jest tu atutem, nie polem do odhaczenia.</span></p></div>
+      <div class="row"><b>Dystrybucja wbudowana</b><p>Każdy szukający to potencjalne konto; każde konto, które udostępni artykuł, wciąga swoją uczelnię. <span>To naukowcy są działem sprzedaży.</span></p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 10 MARKET -->
+<section class="slide t-paper" data-stage="RECENZJA">
+  <span class="ghostnum">10</span>
+  <div class="wrap">
+    <div class="eyebrow r r1">Rynek</div>
+    <h1 class="r r2">System krajowy, odnawiany <span class="mark">ustawą</span>, w każdym cyklu.</h1>
+    <div class="statrow r r3">
+      <div class="stat"><b>≈360</b><span>uczelni wyższych w Polsce — każda pod presją ewaluacji</span></div>
+      <div class="stat"><b>≈93 tys.</b><span>pracowników naukowych — każdy to darmowy użytkownik, źródło danych i ambasador wewnątrz uczelni</span></div>
+      <div class="stat"><b>Cyklicznie</b><span>ewaluacja i PKA są wymagane ustawowo — popyt odnawia się sam</span></div>
+    </div>
+    <p class="lead r r4" style="max-width:64ch">Wejście oddolne: 500 płacących wydziałów i jednostek po ≈12 000 PLN rocznie to szansa rzędu ≈6 mln PLN ARR w samej Polsce — przed ekspansją w Europie Środkowej, gdzie każdy kraj prowadzi własny wykaz i reżim ewaluacji na tym samym zepsutym procesie.</p>
+    <p class="kicker r r5">Polska to klin. Problem ścieżki publikacji jest <span class="em">europejski</span>.</p>
+  </div>
+</section>
+
+<!-- 11 BUSINESS MODEL -->
+<section class="slide t-white" data-stage="PRZYJĘTY">
+  <span class="ghostnum">11</span>
+  <div class="wrap">
+    <div class="eyebrow r r1">Model biznesowy</div>
+    <h1 class="r r2">Darmowe tam, gdzie się <span class="em">rozprzestrzenia</span>. Płatne tam, gdzie <span class="em">ratuje kategorie</span>.</h1>
+    <div class="tiers r r3">
+      <div class="tier">
+        <span class="who">Naukowcy</span>
+        <div class="price">0 zł <small>na zawsze</small></div>
+        <ul>
+          <li>Wyszukiwarka i lista czasopism</li>
+          <li>Tablica ścieżki publikacji</li>
+          <li>Import i autouzupełnianie DOI</li>
+          <li>Udostępnianie kontrolowane przez autora</li>
+        </ul>
+        <span class="note">Pozyskanie, nigdy przychód</span>
+      </div>
+      <div class="tier">
+        <span class="who">Uczelnia · Start</span>
+        <div class="price">0 zł</div>
+        <ul>
+          <li>Żywy panel udostępnionego dorobku</li>
+          <li>Wgląd w ścieżkę publikacji</li>
+          <li>Eksport CSV</li>
+          <li>1 konto administratora</li>
+        </ul>
+        <span class="note">Przejmiesz w kilka minut, bez przetargu</span>
+      </div>
+      <div class="tier hot">
+        <span class="who">Uczelnia · Pro</span>
+        <div class="price">1 000 zł <small>/ wydział / mies.</small></div>
+        <ul>
+          <li>Struktura wydziałów i grup</li>
+          <li>Formaty raportów pod ewaluację i PKA</li>
+          <li>Powiadomienia e-mail, wielu adminów</li>
+          <li>Onboarding i import masowy</li>
+        </ul>
+        <span class="note">Mniej niż jeden dzień nadgodzin administracji</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 12 COMPETITION -->
+<section class="slide t-paper" data-stage="PRZYJĘTY">
+  <span class="ghostnum">12</span>
+  <div class="wrap">
+    <div class="eyebrow r r1">Krajobraz</div>
+    <h1 class="r r2">Zasilamy istniejące systemy.<br><span class="mark">Nie walczymy z nimi</span>.</h1>
+    <table class="comp r r3">
+      <tr><th>System</th><th>Czym jest</th><th>Gdzie my</th></tr>
+      <tr><td>PBN / POL-on</td><td>Obowiązkowy krajowy rejestr opublikowanych prac</td><td>Pokrywamy wszystko przed publikacją i podajemy wam czyste dane do raportowania</td></tr>
+      <tr><td>Omega-PSIR i repozytoria</td><td>Archiwa uczelni, obsługiwane przez biblioteki, odgórnie</td><td>Najpierw naukowiec, oddolnie — adopcja bez projektu wdrożeniowego</td></tr>
+      <tr><td>ORCID</td><td>Tożsamość naukowca i lista publikacji</td><td>Brak ścieżki, punktów MNiSW i raportowania — uzupełniamy się, nie konkurujemy</td></tr>
+      <tr><td>Excel i e-mail</td><td>Prawdziwy konkurent</td><td>Autouzupełnianie DOI bije przepisywanie; jedna tablica bije sto ponaglających maili</td></tr>
+    </table>
+    <p class="kicker r r4">Kategoria, którą tworzymy, jest pusta: <span class="em">system zapisu nauki, zanim zostanie opublikowana</span>.</p>
+  </div>
+</section>
+
+<!-- 13 ASK -->
+<section class="slide t-cobalt" data-stage="OPUBLIKOWANY">
+  <span class="ghostnum">13</span>
+  <div class="wrap">
+    <div class="eyebrow r r1">Zaproszenie</div>
+    <h1 class="r r2">Bądźcie uczelnią, która widzi swoją naukę <span class="mark">pierwsza</span>.</h1>
+    <div class="split r r3">
+      <div class="box fill">
+        <h3>Dla uczelni — pilotaż założycielski</h3>
+        <p>Wybieramy trzy uczelnie jako partnerów założycielskich. Za darmo na czas pilotażu, wdrożenie z pełnym wsparciem i bezpośredni wpływ na kształt raportów, na których oprą się wasze zespoły ds. ewaluacji i PKA. Wasi naukowcy mogą być na platformie jeszcze w tym semestrze.</p>
+        <a class="cta" href="#" onclick="return false">Dołącz do pilotażu</a>
+      </div>
+      <div class="box ghost">
+        <h3>Dla inwestorów</h3>
+        <p>Oddolny SaaS z wbudowaną dystrybucją, rosnącym z dnia na dzień zbiorem danych w skali kraju, ustawowo powtarzalnym popytem — i powtarzalnym scenariuszem dla każdego reżimu ewaluacji w Europie Środkowej.</p>
+        <a class="cta" href="#" onclick="return false">Zacznijmy rozmowę</a>
+      </div>
+    </div>
+    <div class="r r4" style="margin-top:2.8rem;display:flex;align-items:center;gap:1.6rem;flex-wrap:wrap">
+      <span class="badge" style="margin-top:0">Pilotaż założycielski · 2026 · 3 miejsca</span>
+      <span class="meta">gdziepisac.pl &nbsp;·&nbsp; kontakt@gdziepisac.pl</span>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<div class="hint" id="hint">Naciśnij → aby zacząć</div>
+<div class="ui">
+  <div class="counter"><b id="cStage">POMYSŁ</b> · <span id="cNum">01 / 13</span></div>
+  <div class="rail">
+    <div class="base"></div>
+    <div class="fill" id="railFill"></div>
+    <div class="ticks" id="ticks"></div>
+  </div>
+  <div class="navbtns">
+    <button id="prev" aria-label="Poprzedni slajd">←</button>
+    <button id="next" aria-label="Następny slajd">→</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var ticksEl = document.getElementById('ticks');
+  var fill = document.getElementById('railFill');
+  var cNum = document.getElementById('cNum');
+  var cStage = document.getElementById('cStage');
+  var hint = document.getElementById('hint');
+  var body = document.body;
+  var cur = 0, n = slides.length;
+
+  function uiFor(slide){
+    return slide.classList.contains('t-cobalt') ? 'dark' : 'light';
+  }
+
+  slides.forEach(function(s,i){
+    var t = document.createElement('button');
+    t.className = 'tick';
+    t.setAttribute('aria-label','Slajd '+(i+1)+' — '+s.dataset.stage);
+    t.addEventListener('click',function(){ go(i); });
+    ticksEl.appendChild(t);
+  });
+  var ticks = Array.prototype.slice.call(ticksEl.children);
+
+  function pad(x){ return (x<10?'0':'')+x; }
+
+  function go(i){
+    i = Math.max(0, Math.min(n-1, i));
+    slides[cur].classList.remove('active');
+    cur = i;
+    slides[cur].classList.add('active');
+    cNum.textContent = pad(cur+1)+' / '+pad(n);
+    cStage.textContent = slides[cur].dataset.stage;
+    fill.style.width = (cur/(n-1)*100)+'%';
+    body.setAttribute('data-ui', uiFor(slides[cur]));
+    ticks.forEach(function(t,k){
+      t.classList.toggle('done', k<cur);
+      t.classList.toggle('now', k===cur);
+    });
+    if(cur>0 && hint){ hint.style.display='none'; }
+  }
+  function next(){ go(cur+1); }
+  function prev(){ go(cur-1); }
+
+  document.getElementById('next').addEventListener('click',next);
+  document.getElementById('prev').addEventListener('click',prev);
+  document.addEventListener('keydown',function(e){
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){ e.preventDefault(); next(); }
+    else if(e.key==='ArrowLeft'||e.key==='PageUp'){ e.preventDefault(); prev(); }
+    else if(e.key==='Home'){ go(0); }
+    else if(e.key==='End'){ go(n-1); }
+  });
+
+  var x0=null;
+  document.addEventListener('touchstart',function(e){ x0=e.touches[0].clientX; },{passive:true});
+  document.addEventListener('touchend',function(e){
+    if(x0===null) return;
+    var dx = e.changedTouches[0].clientX - x0;
+    if(Math.abs(dx)>50){ dx<0?next():prev(); }
+    x0=null;
+  },{passive:true});
+
+  go(0);
+})();
+</script>
+</body>
+</html>
